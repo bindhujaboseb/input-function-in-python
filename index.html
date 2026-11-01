@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Input Lab</title>
+<!--
+  PYTHON INPUT LAB – Grade 8 Work Education
+  Topic: Taking Input from the User in Python (input() function)
+  Sharjah Indian School, Juwaiza – Department of Computer Science
+
+  SETUP:
+  1. SHEET_URL – paste the Web App URL from your Google Apps Script deployment.
+  2. The PINs are NOT kept in this file. Set them in the "Settings" tab of your Google Sheet
+     (Start PIN and Teacher PIN) – you can change them for every class.
+     The website checks the PIN with the Google Sheet, so students cannot find it in the page source,
+     and it is never saved on the computer.
+-->
+<style>
+  :root{
+    --bg:#f2f6f7; --card:#fff; --ink:#1b2a33; --muted:#5b6b75; --line:#d6e1e4;
+    --teal:#0f5c63; --teal-2:#147a83; --teal-soft:#e2f1f2; --amber:#f2b531;
+    --green:#2e9d5b; --green-soft:#e5f5eb; --red:#c4473f; --red-soft:#fbeaea;
+    --shell:#1d2329; --shell-ink:#e6edf3; --prompt:#8fd3ff;
+    --str:#f7d55c; --int:#5aa7f0; --float:#4cc38a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  header{background:var(--teal);color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  header h1{margin:0;font-size:21px}
+  header small{opacity:.85;font-size:13px}
+  .who{display:flex;align-items:center;gap:10px;font-size:14px}
+  .pts{background:var(--amber);color:#3b2a00;font-weight:700;padding:5px 12px;border-radius:20px}
+  .out{background:transparent;color:#fff;border:1px solid #fff;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:13px}
+  .steps{display:flex;gap:4px;justify-content:center;padding:10px 12px 0;flex-wrap:wrap}
+  .st{font-size:12px;padding:4px 10px;border-radius:12px;background:#e3e9eb;color:var(--muted)}
+  .st.on{background:var(--teal);color:#fff}.st.done{background:var(--green);color:#fff}
+  main{max-width:900px;margin:18px auto;padding:0 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;margin-bottom:16px}
+  h2{margin:0 0 8px;font-size:20px;color:var(--teal)}
+  .tag{display:inline-block;font-size:12px;font-weight:700;background:var(--teal-soft);color:var(--teal);padding:3px 10px;border-radius:12px;margin-bottom:8px}
+  label{display:block;font-weight:600;margin:12px 0 4px;font-size:14px}
+  input[type=text],input[type=password],select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:inherit}
+  .row{display:flex;gap:12px}.row>div{flex:1}
+  .btn{background:var(--teal);color:#fff;border:0;border-radius:8px;padding:10px 18px;font-size:15px;font-weight:600;cursor:pointer;margin:12px 8px 0 0}
+  .btn.alt{background:#fff;color:var(--teal);border:1px solid var(--teal)}
+  .btn:disabled{opacity:.45;cursor:default}
+  code,.mono{font-family:Consolas,"Courier New",monospace}
+  pre{background:var(--shell);color:var(--shell-ink);padding:12px;border-radius:8px;overflow-x:auto;font-size:14px;margin:8px 0;line-height:1.5}
+  .opt{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:8px 0;cursor:pointer;font-size:15px;font-family:inherit}
+  .opt:hover:not(:disabled){border-color:var(--teal)}
+  .opt.right{border-color:var(--green);background:var(--green-soft)}
+  .opt.wrong{border-color:var(--red);background:var(--red-soft)}
+  .msg{margin-top:12px;padding:10px 12px;border-radius:8px;font-size:14px;line-height:1.45}
+  .ok{background:var(--green-soft);color:#1d6b3d}.bad{background:var(--red-soft);color:#8a2b25}.info{background:var(--teal-soft);color:#0d4a50}
+  .hint{font-size:14px;color:var(--teal);cursor:pointer;text-decoration:underline;display:inline-block;margin-top:10px}
+  .center{text-align:center}
+  .badge{font-size:64px}
+  .hidden{display:none}
+
+  /* simulator */
+  .sim{display:grid;grid-template-columns:1.25fr 1fr;gap:14px}
+  .panel-t{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:0 0 6px}
+  .editor{background:#fbfcfd;border:1px solid var(--line);border-radius:8px;padding:8px 0;font-family:Consolas,monospace;font-size:14px}
+  .ln{padding:3px 12px;white-space:pre;color:#8a98a1;border-left:3px solid transparent}
+  .ln.now{background:#fff6d9;color:var(--ink);border-left-color:var(--amber)}
+  .ln.ran{color:var(--ink)}
+  .shell{background:var(--shell);color:var(--shell-ink);border-radius:8px;padding:10px 12px;font-family:Consolas,monospace;font-size:14px;min-height:150px;margin-top:10px;white-space:pre-wrap}
+  .shell .p{color:var(--prompt)}
+  .shell .err{color:#ff8a80}
+  .shell input{background:transparent;border:0;border-bottom:1px dashed #8fd3ff;color:#fff;font-family:Consolas,monospace;font-size:14px;width:160px;outline:none;padding:0}
+  .cursor{display:inline-block;width:8px;background:#e6edf3;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .shelf{background:#f7f3ea;border:1px solid #e7dcc4;border-radius:8px;padding:12px;min-height:240px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:12px}
+  .box{width:116px;border-radius:8px;border:2px solid #333;background:#fff;text-align:center;animation:drop .45s ease-out;overflow:hidden}
+  .box .lbl{font-family:Consolas,monospace;font-weight:700;font-size:13px;padding:4px;background:#333;color:#fff}
+  .box .val{font-family:Consolas,monospace;font-size:17px;padding:12px 4px;word-break:break-all;transition:all .5s}
+  .box .ty{font-size:11px;padding:3px;font-weight:700;transition:all .5s}
+  .box.str{border-color:#c9a62a}.box.str .lbl{background:#c9a62a}.box.str .ty{background:var(--str)}
+  .box.int{border-color:#2f7fcb}.box.int .lbl{background:#2f7fcb}.box.int .ty{background:var(--int);color:#fff}
+  .box.float{border-color:#259965}.box.float .lbl{background:#259965}.box.float .ty{background:var(--float);color:#fff}
+  .box.flash{animation:flash .8s}
+  @keyframes drop{from{transform:translateY(-30px);opacity:0}to{transform:none;opacity:1}}
+  @keyframes flash{0%,100%{transform:none}40%{transform:scale(1.12)}}
+  .legend{display:flex;gap:10px;font-size:12px;margin-top:8px;flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:4px}
+  .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+  .note{min-height:48px}
+  .lvchips{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+  .tick{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:15px}
+  .tick input{width:18px;height:18px}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:6px 0 28px}
+  @media (max-width:720px){.sim{grid-template-columns:1fr}.row{flex-direction:column;gap:0}}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🐍 Python Input Lab</h1>
+    <small>Grade 8 · Taking Input from the User · input()</small>
+  </div>
+  <div class="who hidden" id="who">
+    <span id="whoName"></span>
+    <span class="pts" id="pts">0 pts</span>
+    <button class="out" onclick="signOut()">Sign out</button>
+  </div>
+</header>
+<div class="steps hidden" id="steps"></div>
+<main id="app"></main>
+<footer>Sharjah Indian School, Juwaiza · Department of Computer Science · Educate ❖ Enlighten ❖ Empower</footer>
+
+<script>
+/* ================= SETTINGS ================= */
+const SHEET_URL   = "";       // paste your Apps Script Web App URL here
+// Only used for testing BEFORE SHEET_URL is added. Once SHEET_URL is set, these are ignored –
+// you can leave them empty ("") so no PIN appears in this file.
+const TEST_START_PIN   = "1234";
+const TEST_TEACHER_PIN = "2026";
+
+/* PIN check – asks the Google Sheet, so the real PINs are never inside this website */
+async function pinOK(kind, pin){
+  pin = String(pin).trim();
+  if(!pin) return false;
+  if(!SHEET_URL) return pin === (kind === "start" ? TEST_START_PIN : TEST_TEACHER_PIN);
+  const r = await fetch(SHEET_URL + "?check=" + kind + "&pin=" + encodeURIComponent(pin), { cache: "no-store" });
+  const j = await r.json();
+  return j.ok === true;
+}
+/* PIN box that browsers will NOT offer to save or autofill (not a password field) */
+function pinBox(id){
+  return `<input type="text" id="${id}" name="p${Math.random().toString(36).slice(2)}" inputmode="numeric"
+    autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other"
+    style="-webkit-text-security:disc;text-security:disc;letter-spacing:3px">`;
+}
+async function checkPinUI(kind, inputId, btnId, onOK, badMsg){
+  const inp = $(inputId), btn = $(btnId), pin = inp.value;
+  inp.value = "";                      // clear the box straight away
+  btn.disabled = true; $("m").innerHTML = `<div class="msg info">Checking PIN…</div>`;
+  try{
+    if(await pinOK(kind, pin)) return onOK();
+    $("m").innerHTML = `<div class="msg bad">${badMsg}</div>`;
+  }catch(e){
+    $("m").innerHTML = `<div class="msg bad">Could not check the PIN – please check the internet connection and try again.</div>`;
+  }
+  btn.disabled = false; inp.focus();
+}
+const GRADES      = ["VIII", "VII", "VI"];   // first one is selected by default
+
+/* ================= CONTENT ================= */
+const STARTER = [
+  { q: "A Dubai Metro kiosk shows <b>“Welcome, Visitor!”</b> to everyone. What does it need so that it can greet each traveller by their own name?",
+    opts: ["A bigger screen", "A way to ask the traveller to type their name", "A louder speaker"], a: 1 },
+  { q: "Which of these asks <b>you</b> to type something before it can work?",
+    opts: ["A wall clock", "An ATM asking for your PIN", "A road sign"], a: 1 }
+];
+const PLENARY = [
+  { q: "The user types <b>13</b>. What happens?<pre>age = input(\"Age: \")\nprint(age + 1)</pre>",
+    opts: ["It prints 14", "It prints 131", "Error – age is text, so Python cannot add 1"], a: 2 },
+  { q: "Which line correctly takes a <b>decimal price</b> as input?",
+    opts: ["<code>price = input(float(\"Price: \"))</code>", "<code>price = float(input(\"Price: \"))</code>", "<code>price = float input(\"Price: \")</code>"], a: 1 }
+];
+const HOT_Q = "Why should we always write a clear message inside input(), like input(\"Enter your age: \")? What could happen if there was no message?";
+
+const SIM = [
+  { code: 'name = input("Enter your name: ")', kind: "input", prompt: "Enter your name: ", typed: "Aisha", v: "name", t: "str",
+    note: "<b>input()</b> shows the prompt and <b>waits</b>. Whatever the user types is stored in the variable <b>name</b>." },
+  { code: 'print("Hello", name)', kind: "print", out: "Hello Aisha",
+    note: "print() takes the value out of the <b>name</b> box and displays it." },
+  { code: 'num = input("Enter a number: ")', kind: "input", prompt: "Enter a number: ", typed: "5", v: "num", t: "str",
+    note: "The user typed 5 – but look at the box colour. input() <b>always gives text</b>, so it is stored as \"5\"." },
+  { code: 'print(num + num)', kind: "print", out: "55",
+    note: "🔎 <b>The 55 Mystery!</b> Because num is text, + <b>joins</b> the text: \"5\" + \"5\" = \"55\", not 10." },
+  { code: 'age = int(input("Enter your age: "))', kind: "input", prompt: "Enter your age: ", typed: "13", v: "age", t: "str", conv: "int",
+    note: "<b>int()</b> converts the text \"13\" into the whole number 13 (blue box). Now we can do maths with it." },
+  { code: 'print(age + 1)', kind: "print", out: "14",
+    note: "age is a whole number, so age + 1 really adds: 13 + 1 = 14 ✔" },
+  { code: 'price = float(input("Price in AED: "))', kind: "input", prompt: "Price in AED: ", typed: "1.50", v: "price", t: "str", conv: "float",
+    note: "<b>float()</b> converts the text into a decimal number (green box) – perfect for prices in AED." },
+  { code: 'print("Total for 2 karak:", price * 2)', kind: "print", out: "Total for 2 karak: 3.0",
+    note: "🎉 You have seen the whole Input Machine! Click <b>Continue</b> to try it yourself." }
+];
+
+const LEVELS = [
+  { title: "Level 1 – Greeting Bot 👋",
+    task: "Take the user's <b>name</b> and <b>emirate</b> as input and print a personalised welcome message.",
+    sample: "Enter your name: Omar\nWhich emirate do you live in? Ajman\nWelcome Omar! Greetings to everyone in Ajman!",
+    hint: "You need two input() lines, each saved in its own variable. Then use both variables in one print()." },
+  { title: "Level 2 – Birthday Calculator 🎂",
+    task: "Take the user's <b>age</b> as input, convert it with <b>int()</b> and print the age next year in a sentence.",
+    sample: "Enter your age: 13\nNext year you will be 14 years old!",
+    hint: "Remember the 55 Mystery – change the text into a whole number before you add 1." },
+  { title: "Level 3 – Bug Hunt 🐞",
+    task: "Copy this program into IDLE. It has <b>2 bugs</b>. Fix them so that it runs correctly.",
+    code: 'age = input("Age: ")\nprint("Next year:", age + 1)\nprice = input(float("Price: "))\nprint("Price is AED", price)',
+    sample: "Age: 13\nNext year: 14\nPrice: 2.5\nPrice is AED 2.5",
+    hint: "Bug 1: can text be added to a number? Bug 2: check the order – which function should be on the inside?" },
+  { title: "Level 4 (optional) – Karak & Snacks Bill 🧾",
+    task: "Take the <b>price</b> (decimal) and <b>quantity</b> (whole number) as input, calculate <b>total = price * quantity</b> and print the bill in a sentence.",
+    sample: "Price of one karak in AED: 1.50\nHow many cups? 4\nYour bill is AED 6.0",
+    hint: "Price can have decimals and quantity is a whole number – use a different conversion for each." }
+];
+
+const STAGES = [["starter","Starter"],["gate","🔒 PIN"],["sim","Simulator"],["missions","Try it"],["levels","Levels"],["check","Teacher Check"],["plenary","Plenary"],["done","Badge"]];
+
+/* ================= STATE ================= */
+let S = load();
+function fresh(u){
+  return { ...u, date: today(), stage: "starter", sq: 0, s: [null, null], simDone: false,
+    m: 0, lv: [false, false, false, false], cur: 0, approved: false, pq: 0, p: [null, null], hot: "", points: 0 };
+}
+function today(){ const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function save(){ try{ localStorage.setItem("pil8", JSON.stringify(S)); }catch(e){} }
+function load(){ try{ return JSON.parse(localStorage.getItem("pil8")); }catch(e){ return null; } }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c])); }
+const L = i => String.fromCharCode(65 + i);
+const $ = id => document.getElementById(id);
+const app = $("app");
+
+function status(){
+  if(S.stage === "done") return "Completed";
+  if(S.approved) return "Approved";
+  if(S.lv[2]) return "Waiting";
+  return "In progress";
+}
+function badge(){ return S.lv[3] ? "Input Master" : "Input Explorer"; }
+function sync(){
+  if(!SHEET_URL || !S) return;
+  const body = {
+    date: S.date, cls: S.cls, div: S.div, name: S.name,
+    s1: S.s[0] == null ? "" : L(S.s[0]), s2: S.s[1] == null ? "" : L(S.s[1]),
+    sim: S.simDone ? "Watched" : "", missions: S.m,
+    l1: S.lv[0], l2: S.lv[1], l3: S.lv[2], l4: S.lv[3],
+    check: status(), p1: S.p[0] == null ? "" : L(S.p[0]), p2: S.p[1] == null ? "" : L(S.p[1]),
+    hot: S.hot, points: S.points, badge: S.stage === "done" ? badge() : ""
+  };
+  try{ fetch(SHEET_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) }); }catch(e){}
+}
+function commit(){ save(); sync(); drawTop(); }
+function addPts(n){ S.points += n; }
+
+function drawTop(){
+  if(!S){ $("who").classList.add("hidden"); $("steps").classList.add("hidden"); return; }
+  $("who").classList.remove("hidden"); $("steps").classList.remove("hidden");
+  $("whoName").textContent = `${S.name} · ${S.cls}-${S.div}`;
+  $("pts").textContent = S.points + " pts";
+  const idx = STAGES.findIndex(s => s[0] === S.stage);
+  $("steps").innerHTML = STAGES.map((s, i) => `<span class="st ${i < idx ? "done" : i === idx ? "on" : ""}">${s[1]}</span>`).join("");
+}
+function go(stage){ S.stage = stage; commit(); render(); window.scrollTo(0, 0); }
+
+function render(){
+  drawTop();
+  if(!S) return login();
+  ({ starter: () => quiz("starter"), gate, sim, missions, levels, check, plenary: () => S.pq < 2 ? quiz("plenary") : hot(), done })[S.stage]();
+}
+
+/* ================= LOGIN ================= */
+function login(){
+  const divs = "ABCDEFGHIJKLMNOPQ".split("").map(d => `<option>${d}</option>`).join("");
+  app.innerHTML = `
+  <div class="card" style="max-width:480px;margin:30px auto">
+    <h2>Welcome to the Python Input Lab!</h2>
+    <p style="color:var(--muted);margin-top:0">Sign in to start.</p>
+    <label>Name</label><input type="text" id="n" maxlength="40" placeholder="e.g. Aisha Khan">
+    <div class="row">
+      <div><label>Grade</label><select id="g">${GRADES.map(g => `<option>${g}</option>`).join("")}</select></div>
+      <div><label>Division</label><select id="d">${divs}</select></div>
+    </div>
+    <button class="btn" onclick="start()">Start ▶</button>
+    <div id="m"></div>
+  </div>`;
+}
+function start(){
+  const n = $("n").value.trim();
+  if(n.length < 2){ $("m").innerHTML = `<div class="msg bad">Please type your name.</div>`; return; }
+  S = fresh({ name: n, cls: $("g").value, div: $("d").value });
+  commit(); render();
+}
+function signOut(){
+  if(!confirm("Sign out? This clears the computer for the next student.")) return;
+  try{ localStorage.removeItem("pil8"); }catch(e){}
+  S = null; render();
+}
+
+/* ================= QUIZ (starter + plenary) ================= */
+function quiz(kind){
+  const list = kind === "starter" ? STARTER : PLENARY;
+  const i = kind === "starter" ? S.sq : S.pq;
+  const it = list[i];
+  app.innerHTML = `
+  <div class="card">
+    <span class="tag">${kind === "starter" ? "Starter" : "Plenary"} · Question ${i + 1} of ${list.length}</span>
+    <h2>${kind === "starter" ? "Warm-up 🔥" : "Check your learning 🏁"}</h2>
+    <div>${it.q}</div>
+    <div>${it.opts.map((o, k) => `<button class="opt" data-k="${k}">${L(k)}. ${o}</button>`).join("")}</div>
+    <div id="m"></div>
+  </div>`;
+  app.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+    const k = +b.dataset.k, right = k === it.a;
+    app.querySelectorAll(".opt").forEach(x => x.disabled = true);
+    b.classList.add(right ? "right" : "wrong");
+    if(!right) app.querySelector(`.opt[data-k="${it.a}"]`).classList.add("right");
+    if(right) addPts(10);
+    if(kind === "starter"){ S.s[i] = k; S.sq++; } else { S.p[i] = k; S.pq++; }
+    commit();
+    $("m").innerHTML = `<div class="msg ${right ? "ok" : "bad"}">${right ? "Correct! +10 points" : "Not quite – the correct answer is shown in green."}</div>
+      <button class="btn" id="nx">Next ▶</button>`;
+    $("nx").onclick = () => {
+      if(kind === "starter" && S.sq >= STARTER.length) return go("gate");
+      render();
+    };
+  });
+}
+
+/* ================= PIN AFTER STARTER ================= */
+function gate(){
+  app.innerHTML = `
+  <div class="card center">
+    <div class="badge">🔒</div>
+    <h2>Starter complete – well done!</h2>
+    <p>Please wait while your teacher discusses the answers with the class.</p>
+    <p>Then type the <b>PIN</b> your teacher gives you to start the Main Activity.</p>
+    <div style="max-width:260px;margin:14px auto 0;text-align:left">
+      <label>PIN</label>
+      ${pinBox("gpin")}
+      <button class="btn" id="gok">Unlock ▶</button>
+    </div>
+    <div id="m"></div>
+  </div>`;
+  const tryPin = () => checkPinUI("start", "gpin", "gok", () => go("sim"),
+    "That PIN is not correct. Wait for your teacher to give you the PIN.");
+  $("gok").onclick = tryPin;
+  $("gpin").onkeydown = e => { if(e.key === "Enter") tryPin(); };
+}
+
+/* ================= SHELL + MEMORY HELPERS ================= */
+function shellLine(sh, html){ const d = document.createElement("div"); d.innerHTML = html; sh.appendChild(d); return d; }
+function putBox(shelf, v, val, t){
+  let b = shelf.querySelector(`[data-v="${v}"]`);
+  const show = t === "str" ? `"${esc(val)}"` : esc(val);
+  const tl = { str: "text (str)", int: "whole number (int)", float: "decimal (float)" }[t];
+  if(!b){ b = document.createElement("div"); b.dataset.v = v; shelf.appendChild(b); }
+  b.className = "box " + t;
+  b.innerHTML = `<div class="lbl">${esc(v)}</div><div class="val">${show}</div><div class="ty">${tl}</div>`;
+  return b;
+}
+function convert(b, t, val){
+  setTimeout(() => {
+    b.className = "box " + t + " flash";
+    b.querySelector(".val").textContent = val;
+    b.querySelector(".ty").textContent = t === "int" ? "whole number (int)" : "decimal (float)";
+  }, 900);
+}
+const legend = `<div class="legend"><span><i style="background:var(--str)"></i>text</span><span><i style="background:var(--int)"></i>whole number</span><span><i style="background:var(--float)"></i>decimal</span></div>`;
+
+/* ================= SIMULATOR ================= */
+let simI = 0, busy = false;
+function sim(){
+  simI = 0; busy = false;
+  app.innerHTML = `
+  <div class="card">
+    <span class="tag">Main Activity · Explore</span>
+    <h2>Input Machine Simulator 🎰</h2>
+    <p style="margin-top:0">Click <b>Run next line</b> and watch what happens in the Shell and in the computer's memory.</p>
+    <div class="sim">
+      <div>
+        <p class="panel-t">Program</p>
+        <div class="editor">${SIM.map((s, i) => `<div class="ln" id="ln${i}">${esc(s.code)}</div>`).join("")}</div>
+        <p class="panel-t" style="margin-top:10px">IDLE Shell</p>
+        <div class="shell" id="sh" style="margin-top:0"></div>
+      </div>
+      <div>
+        <p class="panel-t">Memory (variable boxes)</p>
+        <div class="shelf" id="shelf"></div>
+        ${legend}
+      </div>
+    </div>
+    <div class="msg info note" id="note">Ready! Click <b>Run next line</b> to start.</div>
+    <button class="btn" id="run">▶ Run next line</button>
+    <button class="btn alt" id="restart">↺ Restart</button>
+    <button class="btn ${S.simDone ? "" : "hidden"}" id="cont">Continue ▶</button>
+  </div>`;
+  $("run").onclick = simStep;
+  $("restart").onclick = sim;
+  $("cont").onclick = () => go("missions");
+}
+function simStep(){
+  if(busy || simI >= SIM.length) return;
+  busy = true; $("run").disabled = true;
+  const s = SIM[simI], sh = $("sh"), shelf = $("shelf");
+  document.querySelectorAll(".ln").forEach(l => l.classList.remove("now"));
+  $("ln" + simI).classList.add("now", "ran");
+  const finish = () => {
+    $("note").innerHTML = s.note;
+    simI++; busy = false;
+    if(simI >= SIM.length){
+      $("run").disabled = true;
+      if(!S.simDone){ S.simDone = true; addPts(20); commit(); $("note").innerHTML += " <b>+20 points</b>"; }
+      $("cont").classList.remove("hidden");
+    } else $("run").disabled = false;
+  };
+  if(s.kind === "print"){ shellLine(sh, esc(s.out)); finish(); return; }
+  const line = shellLine(sh, `<span class="p">${esc(s.prompt)}</span><span class="ty"></span><span class="cursor">&nbsp;</span>`);
+  $("note").innerHTML = "⏳ The computer is <b>waiting</b> for the user to type…";
+  let c = 0;
+  const t = setInterval(() => {
+    line.querySelector(".ty").textContent = s.typed.slice(0, ++c);
+    if(c >= s.typed.length){
+      clearInterval(t);
+      setTimeout(() => {
+        line.querySelector(".cursor").remove();
+        const b = putBox(shelf, s.v, s.typed, "str");
+        if(s.conv){ convert(b, s.conv, s.conv === "int" ? String(parseInt(s.typed)) : String(parseFloat(s.typed))); setTimeout(finish, 1000); }
+        else finish();
+      }, 350);
+    }
+  }, 220);
+}
+
+/* ================= MISSIONS ================= */
+const MISSIONS = [
+  { title: "Mission 1 – Ask for a name",
+    task: "Write <b>one line</b> of Python that asks the user for their name and stores it in a variable called <b>name</b>.",
+    re: /^\s*name\s*=\s*input\s*\(\s*(["'])(.*?)\1\s*\)\s*$/, v: "name", t: "str",
+    hint: "Start with the variable, then =, then the function that ‘listens’, with a message in quotes inside its brackets." },
+  { title: "Mission 2 – Ask for an age (as a number)",
+    task: "Write <b>one line</b> that asks for the user's age and stores it as a <b>whole number</b> in a variable called <b>age</b>.",
+    re: /^\s*age\s*=\s*int\s*\(\s*input\s*\(\s*(["'])(.*?)\1\s*\)\s*\)\s*$/, v: "age", t: "int",
+    hint: "Wrap your input() inside the function that makes whole numbers." },
+  { title: "Mission 3 – Predict the output",
+    predict: true }
+];
+function missions(){
+  const i = S.m;
+  if(i >= MISSIONS.length) return go("levels");
+  const M = MISSIONS[i];
+  if(M.predict){
+    app.innerHTML = `
+    <div class="card">
+      <span class="tag">Try it yourself · ${i + 1} of 3</span>
+      <h2>${M.title}</h2>
+      <p>The user types <b>5</b>. What does this program print?</p>
+      <pre>num = input("Enter a number: ")\nprint(num + num)</pre>
+      ${["10", "55", "Error"].map((o, k) => `<button class="opt" data-k="${k}">${L(k)}. ${o}</button>`).join("")}
+      <div id="m"></div>
+    </div>`;
+    app.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+      const k = +b.dataset.k;
+      if(k !== 1){ b.classList.add("wrong"); b.disabled = true; $("m").innerHTML = `<div class="msg bad">Think again – what type of value does input() give? Try another answer.</div>`; return; }
+      app.querySelectorAll(".opt").forEach(x => x.disabled = true);
+      b.classList.add("right");
+      S.m++; addPts(10); commit();
+      $("m").innerHTML = `<div class="msg ok">Yes! "5" + "5" joins the text to make 55. +10 points</div><button class="btn" onclick="go('levels')">Go to the Levels ▶</button>`;
+    });
+    return;
+  }
+  app.innerHTML = `
+  <div class="card">
+    <span class="tag">Try it yourself · ${i + 1} of 3</span>
+    <h2>${M.title}</h2>
+    <p>${M.task}</p>
+    <div class="sim">
+      <div>
+        <p class="panel-t">Your code</p>
+        <input type="text" id="code" class="mono" spellcheck="false" autocomplete="off" placeholder="type your line of Python here">
+        <button class="btn" id="runm">▶ Run</button>
+        <span class="hint" id="hb">Need a hint?</span><div id="hbox"></div>
+        <p class="panel-t" style="margin-top:12px">IDLE Shell</p>
+        <div class="shell" id="sh" style="margin-top:0;min-height:90px"></div>
+      </div>
+      <div>
+        <p class="panel-t">Memory</p>
+        <div class="shelf" id="shelf" style="min-height:150px"></div>
+        ${legend}
+      </div>
+    </div>
+    <div id="m"></div>
+  </div>`;
+  $("hb").onclick = () => { $("hbox").innerHTML = `<div class="msg info">💡 ${M.hint}</div>`; $("hb").remove(); };
+  $("runm").onclick = () => {
+    const c = $("code").value, sh = $("sh"), mm = M.re.exec(c);
+    sh.innerHTML = ""; $("m").innerHTML = "";
+    if(!mm){
+      let why = "Check your spelling, brackets and quotes.";
+      if(!c.includes("=")) why = "Remember to store the answer in a variable using =.";
+      else if(!/input\s*\(/.test(c)) why = "Which function lets the computer ‘listen’ to the user?";
+      else if(!new RegExp("^\\s*" + M.v + "\\s*=").test(c)) why = `The variable must be called <b>${M.v}</b>.`;
+      else if(M.t === "int" && !/int\s*\(/.test(c)) why = "The age must be stored as a whole number, not text.";
+      shellLine(sh, `<span class="err">SyntaxError / Not quite</span>`);
+      $("m").innerHTML = `<div class="msg bad">${why}</div>`;
+      return;
+    }
+    $("runm").disabled = true; $("code").disabled = true;
+    askUser(sh, mm[2], M, () => {
+      S.m++; addPts(10); commit();
+      $("m").innerHTML = `<div class="msg ok">Mission complete! +10 points</div><button class="btn" onclick="missions()">Next mission ▶</button>`;
+    });
+  };
+}
+function askUser(sh, prompt, M, done){
+  const line = shellLine(sh, `<span class="p">${esc(prompt)}</span>`);
+  const inp = document.createElement("input"); inp.type = "text"; inp.placeholder = "type & press Enter";
+  line.appendChild(inp); inp.focus();
+  $("m").innerHTML = `<div class="msg info">⏳ Your program is waiting – type an answer in the Shell and press <b>Enter</b>.</div>`;
+  inp.onkeydown = e => {
+    if(e.key !== "Enter") return;
+    const v = inp.value;
+    if(!v.trim()) return;
+    line.innerHTML = `<span class="p">${esc(prompt)}</span>${esc(v)}`;
+    if(M.t === "int" && !/^\s*-?\d+\s*$/.test(v)){
+      shellLine(sh, `<span class="err">ValueError: invalid literal for int() with base 10: '${esc(v)}'</span>`);
+      $("m").innerHTML = `<div class="msg bad">int() can only convert whole numbers. Run it again and type a number like 13.</div>`;
+      setTimeout(() => askUser(sh, prompt, M, done), 1200);
+      return;
+    }
+    const b = putBox($("shelf"), M.v, v, "str");
+    if(M.t === "int"){ convert(b, "int", String(parseInt(v))); setTimeout(done, 1000); }
+    else done();
+  };
+}
+
+/* ================= LEVELS ================= */
+let viewLv = null;   // which level is open on screen (students can go back to earlier levels)
+function canOpen(k){ return k <= S.cur || S.lv[k]; }
+function openLevel(k){ if(!canOpen(k)) return; viewLv = k; if(S.stage !== "levels") go("levels"); else { levels(); window.scrollTo(0, 0); } }
+function levels(){
+  if(viewLv == null || !canOpen(viewLv)) viewLv = S.cur;
+  const i = viewLv, Lv = LEVELS[i];
+  const chips = LEVELS.map((x, k) => {
+    if(k === 3 && !canOpen(3)) return "";
+    const cls = k === i ? "on" : S.lv[k] ? "done" : "";
+    return `<button class="st ${cls}" style="border:0;cursor:${canOpen(k) ? "pointer" : "default"}" ${canOpen(k) ? `onclick="openLevel(${k})"` : "disabled"}>${S.lv[k] ? "✔ " : ""}${k < 3 ? "Level " + (k + 1) : "Level 4 ⭐"}</button>`;
+  }).join("");
+  const finished = S.lv[i];
+  const nav = S.lv[2]
+    ? `<button class="btn alt" onclick="viewLv=null;go('check')">Back to Teacher Check ▶</button>`
+    : (i !== S.cur ? `<button class="btn alt" onclick="openLevel(${S.cur})">Go to Level ${S.cur + 1} ▶</button>` : "");
+  app.innerHTML = `
+  <div class="card">
+    <div class="lvchips">${chips}</div>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 8px">Click a level above to see its question again.</p>
+    <span class="tag">Write your program in Python IDLE</span>
+    <h2>${Lv.title}</h2>
+    <p>${Lv.task}</p>
+    ${Lv.code ? `<p class="panel-t">Program with bugs</p><pre>${esc(Lv.code)}</pre>` : ""}
+    <p class="panel-t">Sample run (your output should look like this)</p>
+    <pre>${esc(Lv.sample)}</pre>
+    <span class="hint" id="hb">Need a hint?</span><div id="hbox"></div>
+    ${finished
+      ? `<div class="msg ok">✔ You have completed this level.</div>`
+      : `<label class="tick"><input type="checkbox" id="tk"> My program runs correctly in IDLE – I have completed ${i < 3 ? "Level " + (i + 1) : "Level 4"}.</label>
+         <button class="btn" id="done" disabled>Level complete ✔</button>`}
+    ${nav}
+    <div id="m"></div>
+  </div>`;
+  $("hb").onclick = () => { $("hbox").innerHTML = `<div class="msg info">💡 ${Lv.hint}</div>`; $("hb").remove(); };
+  if(finished) return;
+  $("tk").onchange = () => $("done").disabled = !$("tk").checked;
+  $("done").onclick = () => {
+    S.lv[i] = true; addPts(20);
+    if(i < 2){ S.cur = i + 1; viewLv = S.cur; commit(); levels(); window.scrollTo(0, 0); }
+    else { viewLv = null; go("check"); }
+  };
+}
+
+/* ================= TEACHER CHECK ================= */
+function check(){
+  if(S.approved) return go("plenary");
+  app.innerHTML = `
+  <div class="card center">
+    <div class="badge">🙋</div>
+    <h2>Teacher Check</h2>
+    <p>Well done! Raise your hand and show your teacher your <b>Python programs in IDLE</b>.</p>
+    <div class="msg info" style="text-align:left">⏳ You are on the teacher's list – <b>waiting for Teacher Check</b>.</div>
+    <p style="margin-bottom:0">See a level again:</p>
+    ${[0, 1, 2].map(k => `<button class="btn alt" onclick="openLevel(${k})">Level ${k + 1}</button>`).join("")}
+    ${!S.lv[3] ? `<p>While you wait, you can try the optional challenge:</p><button class="btn alt" id="l4">⭐ Try Level 4 (optional)</button>` : `<p>⭐ Level 4 completed! <a href="#" onclick="openLevel(3);return false">See Level 4</a></p>`}
+    <div style="max-width:280px;margin:18px auto 0;text-align:left">
+      <label>Teacher PIN (teacher only)</label>
+      ${pinBox("pin")}
+      <button class="btn" id="ap">Approve ✔</button>
+    </div>
+    <div id="m"></div>
+  </div>`;
+  if($("l4")) $("l4").onclick = () => { S.cur = 3; openLevel(3); };
+  $("ap").onclick = () => {
+    checkPinUI("teacher", "pin", "ap", () => { S.approved = true; go("plenary"); }, "Incorrect PIN.");
+  };
+}
+
+/* ================= HOT + BADGE ================= */
+function hot(){
+  app.innerHTML = `
+  <div class="card">
+    <span class="tag">Plenary · HOT Question</span>
+    <h2>Think deeper 🧠</h2>
+    <p>${HOT_Q}</p>
+    <textarea id="h" rows="5" placeholder="Type your answer here…"></textarea>
+    <button class="btn" id="sub">Submit answer</button>
+    <div id="m"></div>
+  </div>`;
+  $("sub").onclick = () => {
+    const v = $("h").value.trim();
+    if(!v){ $("m").innerHTML = `<div class="msg bad">Please type your answer before you submit.</div>`; return; }
+    if(v.split(/\s+/).length < 3){ $("m").innerHTML = `<div class="msg bad">Your answer is very short. Please add a few more words to explain your thinking.</div>`; return; }
+    S.hot = v; addPts(10); go("done");
+  };
+}
+function done(){
+  const master = S.lv[3];
+  app.innerHTML = `
+  <div class="card center">
+    <div class="badge">${master ? "🏆" : "🥇"}</div>
+    <h2>${master ? "Input Master" : "Input Explorer"}</h2>
+    <p><b>${esc(S.name)}</b> (${esc(S.cls)}-${esc(S.div)}) – <b>${S.points} points</b></p>
+    <p style="color:var(--muted)">${master ? "You completed all 4 levels. Outstanding!" : "You completed Levels 1–3. Great work!"}</p>
+    <button class="btn alt" onclick="signOut()">Sign out</button>
+  </div>`;
+}
+
+render();
+</script>
+</body>
+</html>
