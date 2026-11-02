@@ -79,10 +79,35 @@
   .dots{display:flex;gap:6px;justify-content:center;margin-top:10px}
   .dots i{width:10px;height:10px;border-radius:50%;background:#d0dadd}.dots i.on{background:var(--teal)}
   .lvchips{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
-  .tick{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:15px}
-  .tick input{width:18px;height:18px}
+
+  /* python editor */
+  .ide{display:grid;grid-template-columns:1fr;gap:10px;margin-top:6px}
+  .edwrap{display:flex;border:2px solid #c9d6da;border-radius:8px;overflow:hidden;background:#fff;height:200px}
+  .edwrap:focus-within{border-color:var(--teal)}
+  .gutter{background:#eef3f4;color:#8a98a1;font-family:Consolas,monospace;font-size:15px;line-height:22px;padding:10px 6px;text-align:right;min-width:34px;overflow:hidden;user-select:none;white-space:pre}
+  .ed{flex:1;border:0;outline:none;resize:none;font-family:Consolas,"Courier New",monospace;font-size:15px;line-height:22px;padding:10px;white-space:pre;overflow:auto;tab-size:4;color:#1b2a33}
+  .ide .shell{height:190px;overflow:auto;min-height:0}
+  .shell .ok-line{color:#9be29b}
+  .rules{list-style:none;padding:0;margin:10px 0 0}
+  .rules li{padding:6px 10px;border-radius:6px;margin:4px 0;font-size:15px;background:#f3f6f7;color:var(--muted)}
+  .rules li.pass{background:var(--green-soft);color:#1d6b3d;font-weight:600}
+  .rules li.fail{background:var(--red-soft);color:#8a2b25}
+  @media (max-width:720px){.ide{grid-template-columns:1fr}}
   footer{text-align:center;color:var(--muted);font-size:12px;padding:6px 0 28px}
-  @media (max-width:720px){.sim{grid-template-columns:1fr}.row{flex-direction:column;gap:0}}
+  /* learning objective + success criteria panel */
+  #losc{max-width:900px;margin:12px auto 0;padding:0 16px}
+  .losc{display:grid;grid-template-columns:1fr 1.35fr;gap:0;background:#fff;border:2px solid var(--teal);border-radius:12px;overflow:hidden}
+  .losc .walt b{color:var(--amber)}
+  .losc .walt{background:var(--teal);color:#fff;padding:12px 14px;font-size:14px;line-height:1.45}
+  .losc .walt .h{display:block;font-weight:700;font-size:12px;letter-spacing:.05em;color:var(--amber);margin-bottom:4px}
+  .losc .wilf{padding:10px 14px;font-size:14px}
+  .losc .wilf>b{display:flex;justify-content:space-between;font-size:12px;letter-spacing:.05em;color:var(--teal);margin-bottom:4px}
+  .losc .wilf>b span{color:var(--muted);letter-spacing:0;font-weight:600}
+  .sc{display:flex;gap:8px;align-items:flex-start;padding:3px 0;color:var(--muted)}
+  .sc i{font-style:normal;width:20px;height:20px;border-radius:50%;border:2px solid #b9c7cb;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:none;margin-top:1px}
+  .sc.met{color:#1d6b3d;font-weight:600}.sc.met i{background:var(--green);border-color:var(--green);color:#fff}
+  .sc.all{color:#1d6b3d}
+  @media (max-width:720px){.sim{grid-template-columns:1fr}.row{flex-direction:column;gap:0}.losc{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -99,12 +124,16 @@
   </div>
 </header>
 <div class="steps hidden" id="steps"></div>
+<div id="losc" class="hidden"></div>
 <main id="app"></main>
 <footer>Sharjah Indian School, Juwaiza · Department of Computer Science · Educate ❖ Enlighten ❖ Empower</footer>
 
+<!-- Skulpt: runs Python inside the web page (no Python installation needed) -->
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
 <script>
 /* ================= SETTINGS ================= */
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbxldKtjiQLIY4s3zJ98X8dgnAt_lTs15lqV4dCS4hQyP8_u6O1ioPX4nZIyr_Qk-ecR/exec";
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbzqrNHPz7pAqgZodH5BsSCSyjj34PnWVY9pZPNULPBmph88gCNY66FD44hxLoWbsx4K/exec";
 const GRADES    = ["VIII", "VII", "VI"];   // first one is selected by default
 // Only used for testing when SHEET_URL is empty. With SHEET_URL set, PINs come from the Google Sheet.
 const TEST_START_PIN   = "";
@@ -137,24 +166,51 @@ const SIM = [
     note: "The answer can also come <b>first</b>. 🎉 Well done – click <b>Continue</b> to try it yourself!" }
 ];
 
+/* Levels – written and run in the website's Python editor and checked automatically.
+   r = result of the run: { ok, error, code, prompts[], answers[], printed[] } */
+const has = (lines, txt) => lines.some(l => l.toLowerCase().includes(String(txt).toLowerCase()));
 const LEVELS = [
   { title: "Level 1 – Hello Bot 👋",
     task: "Write a program that asks the user's <b>name</b> and prints <b>Hello</b> with the name.",
     sample: "What is your name? Omar\nHello Omar",
-    hint: "Put input() inside print(), after the word \"Hello\" and a comma." },
+    start: "# Level 1 – write your program below\n",
+    hint: "Put input() inside print(), after the word \"Hello\" and a comma.",
+    rules: [
+      ["Asks a question using input()", r => r.prompts.length >= 1],
+      ["Prints Hello with the name the user typed", r => r.answers.length >= 1 && r.printed.some(l => /hello/i.test(l) && l.includes(r.answers[0]))],
+      ["Runs without errors", r => r.ok]
+    ] },
   { title: "Level 2 – My UAE Questions 🇦🇪",
     task: "Write a program that asks <b>3 questions</b> and prints each answer with a message:<br>• your favourite emirate &nbsp;• your favourite UAE landmark &nbsp;• your favourite sport",
     sample: "Your favourite emirate? Fujairah\nMy favourite emirate is Fujairah\nYour favourite UAE landmark? Burj Khalifa\nI love Burj Khalifa\nYour favourite sport? Football\nI enjoy playing Football",
-    hint: "Write 3 lines – each one is a print() with an input() inside it." },
+    start: "# Level 2 – write your program below\n",
+    hint: "Write 3 lines – each one is a print() with a message and an input() inside it.",
+    rules: [
+      ["Asks 3 questions using input()", r => r.prompts.length >= 3],
+      ["Prints every answer with a message", r => r.answers.length >= 3 && r.answers.every(a => r.printed.some(l => l.includes(a) && l.trim() !== a.trim()))],
+      ["Runs without errors", r => r.ok]
+    ] },
   { title: "Level 3 – Bug Hunt 🐞",
-    task: "Copy this program into IDLE. It has <b>3 bugs</b>. Fix them so that the program runs correctly.",
-    code: 'print("Hello", input(What is your name? ))\nprint("Welcome to" input("Which city are you in? "))\nPrint(input("Your favourite colour? "))',
+    task: "This program has <b>3 bugs</b>. Fix them in the editor so that the program runs correctly.",
     sample: "What is your name? Mariam\nHello Mariam\nWhich city are you in? Ajman\nWelcome to Ajman\nYour favourite colour? Blue\nBlue",
-    hint: "Look for: a question with no quotes, a missing comma, and a capital letter that should be small." },
+    start: 'print("Hello", input(What is your name? ))\nprint("Welcome to" input("Which city are you in? "))\nPrint(input("Your favourite colour? "))\n',
+    hint: "Look for: a question with no quotes, a missing comma, and a capital letter that should be small.",
+    rules: [
+      ["All 3 bugs fixed – the program runs without errors", r => r.ok && r.prompts.length >= 3],
+      ["Prints Hello and Welcome to with the answers", r => r.answers.length >= 2 && r.printed.some(l => /hello/i.test(l) && l.includes(r.answers[0])) && r.printed.some(l => /welcome to/i.test(l) && l.includes(r.answers[1]))],
+      ["Prints the favourite colour", r => r.answers.length >= 3 && has(r.printed, r.answers[2])]
+    ] },
   { title: "Level 4 (optional) – Metro Ticket Kiosk 🚇",
     task: "Make a Dubai Metro kiosk that asks the traveller's <b>name</b> and <b>destination station</b>, and prints a ticket with a line of <b>=</b> signs at the top and bottom.",
     sample: "==============================\nWhat is your name? Fatima\nPassenger: Fatima\nWhere are you going? Mall of the Emirates\nGoing to: Mall of the Emirates\nHave a safe journey!\n==============================",
-    hint: "Use print() for the = lines and the last message. Use print() with input() inside for the name and station." }
+    start: "# Level 4 – write your program below\n",
+    hint: "Use print() for the = lines and the last message. Use print() with input() inside for the name and station.",
+    rules: [
+      ["Prints a line of = signs at the top and bottom", r => r.printed.filter(l => /={5,}/.test(l)).length >= 2],
+      ["Asks for the name and the station using input()", r => r.prompts.length >= 2],
+      ["Shows both answers on the ticket", r => r.answers.length >= 2 && r.answers.slice(0, 2).every(a => r.printed.some(l => l.includes(a) && l.trim() !== a.trim()))],
+      ["Runs without errors", r => r.ok]
+    ] }
 ];
 
 const STAGES = [["starter","Starter"],["gate","🔒 PIN"],["sim","Simulator"],["missions","Try it"],["levels","Levels"],["check","Teacher Check"],["plenary","Plenary"],["done","Badge"]];
@@ -163,7 +219,7 @@ const STAGES = [["starter","Starter"],["gate","🔒 PIN"],["sim","Simulator"],["
 let S = load();
 function fresh(u){
   return { ...u, date: today(), stage: "starter", sq: 0, s: [null, null], simDone: false,
-    m: 0, lv: [false, false, false, false], cur: 0, approved: false, pq: 0, p: [null, null], hot: "", points: 0 };
+    m: 0, lv: [false, false, false, false], code: [null, null, null, null], cur: 0, approved: false, pq: 0, p: [null, null], hot: "", points: 0 };
 }
 function today(){ const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 function save(){ try{ localStorage.setItem("pil8", JSON.stringify(S)); }catch(e){} }
@@ -188,24 +244,62 @@ function sync(){
     sim: S.simDone ? "Watched" : "", missions: S.m,
     l1: S.lv[0], l2: S.lv[1], l3: S.lv[2], l4: S.lv[3],
     check: status(), p1: S.p[0] == null ? "" : L(S.p[0]), p2: S.p[1] == null ? "" : L(S.p[1]),
-    hot: S.hot, points: S.points, badge: S.stage === "done" ? badge() : ""
+    hot: S.hot, points: S.points, badge: S.stage === "done" ? badge() : "",
+    programs: (S.code || []).map((c, i) => c ? `### Level ${i + 1}${S.lv[i] ? " ✔" : ""}\n${c.trim()}` : "").filter(Boolean).join("\n\n").slice(0, 40000)
   };
   try{ fetch(SHEET_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) }); }catch(e){}
 }
 function commit(){ save(); sync(); drawTop(); }
 function addPts(n){ S.points += n; }
 
+/* Learning Objective (WALT) and Success Criteria (WILF) – shown on every page after the Starter.
+   Each criterion is ticked automatically when the student has shown it on the website. */
+const WALT = "use the <b>input()</b> function in Python to ask the user questions and display the answers.";
+const WILF = [
+  ["I can <b>explain</b> what input() does – it shows a question and waits for the user to type.",
+   () => S.simDone && S.m >= 3],                       // simulator + Mission 3 (what comes first)
+  ["I can <b>write</b> input() with a clear question inside quotes.",
+   () => S.m >= 1 && S.lv[0]],                         // Mission 1 + Level 1 passed
+  ["I can <b>use</b> input() inside print() to display a message with the answer.",
+   () => S.m >= 2 && S.lv[0] && S.lv[1] && S.lv[2]]    // Mission 2 + Levels 1–3 passed
+];
+function drawLOSC(){
+  const box = $("losc");
+  if(!S || S.stage === "starter"){ box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  const met = WILF.map(w => { try{ return !!w[1](); }catch(e){ return false; } });
+  const n = met.filter(Boolean).length;
+  box.innerHTML = `<div class="losc">
+    <div class="walt"><span class="h">🎯 LEARNING OBJECTIVE (WALT)</span>We are learning to ${WALT}</div>
+    <div class="wilf"><b>✅ SUCCESS CRITERIA (WILF) <span>${n === 3 ? "🎉 All 3 met!" : n + " of 3 met"}</span></b>
+      ${WILF.map((w, k) => `<div class="sc ${met[k] ? "met" : ""}"><i>${met[k] ? "✔" : k + 1}</i><div>${w[0]}</div></div>`).join("")}
+    </div>
+  </div>`;
+}
+
 function drawTop(){
+  drawLOSC();
   if(!S){ $("who").classList.add("hidden"); $("steps").classList.add("hidden"); return; }
   $("who").classList.remove("hidden"); $("steps").classList.remove("hidden");
   $("whoName").textContent = `${S.name} · ${S.cls}-${S.div}`;
   $("pts").textContent = S.points + " pts";
   const idx = STAGES.findIndex(s => s[0] === S.stage);
-  $("steps").innerHTML = STAGES.map((s, i) => `<span class="st ${i < idx ? "done" : i === idx ? "on" : ""}">${s[1]}</span>`).join("");
+  $("steps").innerHTML = STAGES.map((s, i) => {
+    const cls = i < idx ? "done" : i === idx ? "on" : "";
+    if(s[0] === "sim" && S.simDone && S.stage !== "sim")   // students can go back to the simulator
+      return `<button class="st ${reviewing ? "on" : cls}" style="border:0;cursor:pointer" title="See the simulator again" onclick="openSim()">🔍 ${s[1]}</button>`;
+    return `<span class="st ${reviewing ? (i < idx || i === idx ? "done" : "") : cls}">${s[1]}</span>`;
+  }).join("");
 }
 function go(stage){ S.stage = stage; commit(); render(); window.scrollTo(0, 0); }
 
+let reviewing = false;   // true while a student is looking back at the simulator
+function openSim(){ reviewing = true; drawTop(); sim(); window.scrollTo(0, 0); }
+function backFromSim(){ reviewing = false; render(); window.scrollTo(0, 0); }
+const simLink = () => S.simDone ? `<span class="hint" style="margin-left:14px" onclick="openSim()">🔍 See the simulator examples again</span>` : "";
+
 function render(){
+  reviewing = false;
   drawTop();
   if(!S) return login();
   ({ starter: () => quiz("starter"), gate, sim, missions, levels, check, plenary: () => S.pq < 2 ? quiz("plenary") : hot(), done })[S.stage]();
@@ -340,19 +434,21 @@ function flowSet(id, active, hasPrint){
 }
 
 /* ================= SIMULATOR ================= */
-let simI = 0, busy = false;
+let simI = 0, busy = false, simTok = 0;
 function sim(){
   simI = 0; busy = false;
+  const back = reviewing || S.stage !== "sim";
   app.innerHTML = `
   <div class="card">
-    <span class="tag">Main Activity · Explore</span>
+    <span class="tag">${back ? "Looking back · Simulator" : "Main Activity · Explore"}</span>
     <h2>How does input() work? 🤔</h2>
-    <p style="margin-top:0">Click <b>▶ Run</b> and watch the 3 steps.</p>
+    <p style="margin-top:0">Click <b>▶ Run</b> and watch the 3 steps.${S.simDone ? " Click an <b>Example</b> button to see its code." : ""}</p>
+    ${S.simDone ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px" id="exs">${SIM.map((x, i) => `<button class="st" style="border:0;cursor:pointer" onclick="simI=${i};simShow()">Example ${i + 1}</button>`).join("")}</div>` : ""}
     <div class="sim">
       <div>
         <p class="panel-t">Line of code</p>
         <div class="codeline" id="cl"></div>
-        <p class="panel-t" style="margin-top:12px">IDLE Shell</p>
+        <p class="panel-t" style="margin-top:12px">Shell</p>
         <div class="shell" id="sh"></div>
       </div>
       <div>
@@ -364,15 +460,17 @@ function sim(){
     <div class="dots" id="dots"></div>
     <button class="btn" id="run">▶ Run</button>
     <button class="btn alt hidden" id="nextEx">Next example ▶</button>
-    <button class="btn ${S.simDone ? "" : "hidden"}" id="cont">Continue ▶</button>
+    <button class="btn ${S.simDone ? "" : "hidden"}" id="cont">${back ? "◀ Back to where I was" : "Continue ▶"}</button>
   </div>`;
   $("run").onclick = simRun;
   $("nextEx").onclick = () => { simI++; simShow(); };
-  $("cont").onclick = () => go("missions");
+  $("cont").onclick = () => back ? backFromSim() : go("missions");
   simShow();
 }
 function simShow(){
+  simTok++; busy = false;
   const s = SIM[simI];
+  document.querySelectorAll("#exs .st").forEach((b, i) => b.className = "st" + (i === simI ? " on" : ""));
   $("cl").innerHTML = colour(s.code);
   $("sh").innerHTML = "";
   $("note").innerHTML = `Example ${simI + 1} of ${SIM.length}. Click <b>▶ Run</b>.`;
@@ -384,29 +482,35 @@ function simShow(){
 function simRun(){
   if(busy) return;
   busy = true; $("run").disabled = true;
+  const tok = simTok;
   const s = SIM[simI], sh = $("sh");
+  const live = () => tok === simTok && $("sh") === sh;   // stop if the student switched example or page
   sh.innerHTML = "";
   flowSet("flow", 0, !!s.out);
   $("note").innerHTML = "💬 <b>Step 1:</b> input() shows the question.";
   const line = shellLine(sh, `<span class="p">${esc(s.prompt)}</span><span class="ty"></span><span class="cursor">&nbsp;</span>`);
   setTimeout(() => {
+    if(!live()) return;
     flowSet("flow", 1, !!s.out);
     $("note").innerHTML = "⌨️ <b>Step 2:</b> The program is <b>waiting</b>… the user types an answer and presses Enter.";
     let c = 0;
     setTimeout(function typeNext(){
+      if(!live()) return;
       line.querySelector(".ty").textContent = s.typed.slice(0, ++c);
       if(c < s.typed.length) return setTimeout(typeNext, 230);
       setTimeout(() => {
+        if(!live()) return;
         line.querySelector(".cursor").remove();
         if(s.out){
           flowSet("flow", 2, true);
           shellLine(sh, esc(s.out));
-          setTimeout(finish, 300);
+          setTimeout(finish, 300);   // finish() checks live() itself
         } else { flowSet("flow", 3, false); finish(); }
       }, 500);
     }, 900);
   }, 1300);
   function finish(){
+    if(!live()) return;
     $("note").innerHTML = s.note;
     busy = false;
     $("run").classList.add("hidden");
@@ -476,8 +580,8 @@ function missions(){
         <p class="panel-t">Your line of code</p>
         <input type="text" id="code" class="mono" spellcheck="false" autocomplete="off" placeholder="type your line of Python here">
         <button class="btn" id="runm">▶ Run</button>
-        <span class="hint" id="hb">Need a hint?</span><div id="hbox"></div>
-        <p class="panel-t" style="margin-top:12px">IDLE Shell</p>
+        <span class="hint" id="hb">Need a hint?</span>${simLink()}<div id="hbox"></div>
+        <p class="panel-t" style="margin-top:12px">Shell</p>
         <div class="shell" id="sh" style="min-height:90px"></div>
       </div>
       <div>
@@ -534,32 +638,158 @@ function levels(){
   const nav = S.lv[2]
     ? `<button class="btn alt" onclick="viewLv=null;go('check')">Back to Teacher Check ▶</button>`
     : (i !== S.cur ? `<button class="btn alt" onclick="openLevel(${S.cur})">Go to Level ${S.cur + 1} ▶</button>` : "");
+  if(!S.code) S.code = [null, null, null, null];
+  const nextBtn = i < 2 ? `Go to Level ${i + 2} ▶` : "Go to Teacher Check ▶";
   app.innerHTML = `
   <div class="card">
     <div class="lvchips">${chips}</div>
-    <p style="font-size:13px;color:var(--muted);margin:0 0 8px">Click a level above to see its question again.</p>
-    <span class="tag">Write your program in Python IDLE</span>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 8px">Click a level above to see it again.</p>
+    <span class="tag">Write and run your program in the editor below</span>
     <h2>${Lv.title}</h2>
     <p>${Lv.task}</p>
-    ${Lv.code ? `<p class="panel-t">Program with bugs</p><pre>${esc(Lv.code)}</pre>` : ""}
     <p class="panel-t">Sample run (your output should look like this)</p>
     <pre>${esc(Lv.sample)}</pre>
-    <span class="hint" id="hb">Need a hint?</span><div id="hbox"></div>
-    ${finished
-      ? `<div class="msg ok">✔ You have completed this level.</div>`
-      : `<label class="tick"><input type="checkbox" id="tk"> My program runs correctly in IDLE – I have completed ${i < 3 ? "Level " + (i + 1) : "Level 4"}.</label>
-         <button class="btn" id="done" disabled>Level complete ✔</button>`}
-    ${nav}
-    <div id="m"></div>
+    <span class="hint" id="hb">Need a hint?</span>${simLink()}<div id="hbox"></div>
+    <div class="ide">
+      <div>
+        <p class="panel-t">🐍 Python editor</p>
+        <div class="edwrap"><div class="gutter" id="gut">1</div><textarea class="ed" id="ed" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off"></textarea></div>
+        <button class="btn" id="runp">▶ Run</button>
+        <button class="btn alt" id="reset">↺ Start again</button>
+      </div>
+      <div>
+        <p class="panel-t">Shell (output)</p>
+        <div class="shell" id="psh"><span style="color:#8a98a1">Click ▶ Run to run your program.</span></div>
+      </div>
+    </div>
+    <p class="panel-t" style="margin-top:14px">Checklist – your program must:</p>
+    <ul class="rules" id="rules">${Lv.rules.map(r => `<li>○ ${r[0]}</li>`).join("")}</ul>
+    <div id="m">${finished ? `<div class="msg ok">✔ You have completed this level.</div>` : ""}</div>
+    <div id="after">${finished ? nav : ""}</div>
   </div>`;
   $("hb").onclick = () => { $("hbox").innerHTML = `<div class="msg info">💡 ${Lv.hint}</div>`; $("hb").remove(); };
-  if(finished) return;
-  $("tk").onchange = () => $("done").disabled = !$("tk").checked;
-  $("done").onclick = () => {
-    S.lv[i] = true; addPts(20);
-    if(i < 2){ S.cur = i + 1; viewLv = S.cur; commit(); levels(); window.scrollTo(0, 0); }
-    else { viewLv = null; go("check"); }
+  const ed = $("ed");
+  ed.value = S.code[i] != null ? S.code[i] : Lv.start;
+  setupEditor(ed, $("gut"), () => { S.code[i] = ed.value; save(); });
+  $("reset").onclick = () => {
+    if(!confirm("Start again? Your code for this level will be replaced.")) return;
+    ed.value = Lv.start; S.code[i] = ed.value; save(); ed.dispatchEvent(new Event("input"));
   };
+  $("runp").onclick = async () => {
+    S.code[i] = ed.value; save();
+    $("runp").disabled = true;
+    const r = await runPython(ed.value, $("psh"));
+    $("runp").disabled = false;
+    if(!r) return;   // run was replaced by a newer run
+    const res = Lv.rules.map(rule => { try{ return !!rule[1](r); }catch(e){ return false; } });
+    $("rules").innerHTML = Lv.rules.map((rule, k) => `<li class="${res[k] ? "pass" : "fail"}">${res[k] ? "✔" : "✘"} ${rule[0]}</li>`).join("");
+    if(res.every(Boolean)){
+      const first = !S.lv[i];
+      if(first){ S.lv[i] = true; addPts(20); }
+      if(i < 2) S.cur = Math.max(S.cur, i + 1);   // unlock the next level straight away
+      commit();
+      $("m").innerHTML = `<div class="msg ok">🎉 Excellent! Your program meets all the success criteria${first ? " – <b>+20 points</b>" : ""}.</div>`;
+      $("after").innerHTML = i === 3 || S.lv[2] && i < 2
+        ? `<button class="btn" onclick="viewLv=null;go('check')">Go to Teacher Check ▶</button>`
+        : `<button class="btn" id="nextLv">${nextBtn}</button>`;
+      if($("nextLv")) $("nextLv").onclick = () => {
+        if(i < 2){ S.cur = Math.max(S.cur, i + 1); viewLv = i + 1; commit(); levels(); window.scrollTo(0, 0); }
+        else { viewLv = null; go("check"); }
+      };
+    } else {
+      sync();
+      $("m").innerHTML = `<div class="msg bad">Not yet – look at the red ✘ in the checklist, change your code and click ▶ Run again.</div>`;
+      $("after").innerHTML = finished ? nav : "";
+    }
+  };
+}
+
+/* ================= PYTHON EDITOR + RUNNER (Skulpt) ================= */
+function setupEditor(ed, gut, onChange){
+  const lines = () => { gut.textContent = Array.from({ length: ed.value.split("\n").length }, (_, k) => k + 1).join("\n"); };
+  ed.addEventListener("input", () => { lines(); onChange(); });
+  ed.addEventListener("scroll", () => { gut.scrollTop = ed.scrollTop; });
+  ed.addEventListener("keydown", e => {
+    if(e.key === "Tab"){
+      e.preventDefault();
+      const s = ed.selectionStart;
+      ed.value = ed.value.slice(0, s) + "    " + ed.value.slice(ed.selectionEnd);
+      ed.selectionStart = ed.selectionEnd = s + 4; lines(); onChange();
+    }
+  });
+  lines();
+}
+let runToken = 0;
+function friendlyError(err){
+  let msg = String(err && err.toString ? err.toString() : err);
+  let line = "";
+  try{ if(err.traceback && err.traceback.length) line = " (line " + err.traceback[0].lineno + ")"; }catch(e){}
+  msg = msg.replace(/ on line \d+/, "");
+  let tip = "Read the error, fix your code and run it again.";
+  if(/SyntaxError/.test(msg)) tip = "Check your <b>quotes \" \"</b>, <b>commas</b> and <b>brackets ( )</b> on this line.";
+  const nm = msg.match(/NameError: name '(\w+)' is not defined/);
+  if(nm) tip = /^[A-Z]/.test(nm[1]) ? `Python does not know <b>${esc(nm[1])}</b>. Use small letters – Python is case-sensitive.`
+                                    : `Python does not know <b>${esc(nm[1])}</b>. Check the spelling, or put text inside quotes " ".`;
+  if(/TypeError/.test(msg)) tip = "Check the brackets and commas inside print() and input().";
+  return { text: msg + line, tip };
+}
+function runPython(code, sh){
+  const token = ++runToken;
+  sh.innerHTML = "";
+  const r = { ok: false, error: "", code, prompts: [], answers: [], printed: [] };
+  if(typeof Sk === "undefined"){
+    shellLine(sh, `<span class="err">The Python editor could not load. Please check the internet connection and refresh the page.</span>`);
+    return Promise.resolve(r);
+  }
+  let buf = "";
+  const flushLine = t => { r.printed.push(t); shellLine(sh, esc(t) || "&nbsp;"); sh.scrollTop = sh.scrollHeight; };
+  Sk.configure({
+    __future__: Sk.python3,
+    output: txt => {
+      if(token !== runToken) return;
+      buf += txt;
+      let k;
+      while((k = buf.indexOf("\n")) >= 0){ flushLine(buf.slice(0, k)); buf = buf.slice(k + 1); }
+    },
+    read: f => {
+      if(Sk.builtinFiles === undefined || Sk.builtinFiles.files[f] === undefined) throw "File not found: '" + f + "'";
+      return Sk.builtinFiles.files[f];
+    },
+    inputfunTakesPrompt: true,
+    inputfun: prompt => new Promise(resolve => {
+      if(token !== runToken) return;
+      if(buf){ flushLine(buf); buf = ""; }
+      const p = String(prompt == null ? "" : prompt);
+      r.prompts.push(p);
+      const line = shellLine(sh, `<span class="p">${esc(p)}</span>`);
+      const inp = document.createElement("input"); inp.type = "text"; inp.placeholder = "type & press Enter";
+      line.appendChild(inp); inp.focus(); sh.scrollTop = sh.scrollHeight;
+      inp.onkeydown = e => {
+        if(e.key !== "Enter" || !inp.value.trim()) return;
+        const v = inp.value;
+        line.innerHTML = `<span class="p">${esc(p)}</span>${esc(v)}`;
+        r.answers.push(v.trim());
+        resolve(v);
+      };
+    })
+  });
+  return Sk.misceval.asyncToPromise(() => Sk.importMainWithBody("<stdin>", false, code, true))
+    .then(() => {
+      if(token !== runToken) return null;
+      if(buf){ flushLine(buf); buf = ""; }
+      r.ok = true;
+      shellLine(sh, `<span class="ok-line">✔ Program finished</span>`);
+      return r;
+    })
+    .catch(err => {
+      if(token !== runToken) return null;
+      if(buf){ flushLine(buf); buf = ""; }
+      const f = friendlyError(err);
+      r.error = f.text;
+      shellLine(sh, `<span class="err">${esc(f.text)}</span>`);
+      shellLine(sh, `<span style="color:#ffd27a">💡 ${f.tip}</span>`);
+      return r;
+    });
 }
 
 /* ================= TEACHER CHECK ================= */
@@ -569,7 +799,7 @@ function check(){
   <div class="card center">
     <div class="badge">🙋</div>
     <h2>Teacher Check</h2>
-    <p>Well done! Raise your hand and show your teacher your <b>Python programs in IDLE</b>.</p>
+    <p>Well done! Raise your hand – your teacher will check your <b>Python programs</b> on this website.</p>
     <div class="msg info" style="text-align:left">⏳ You are on the teacher's list – <b>waiting for Teacher Check</b>.</div>
     <p style="margin-bottom:0">See a level again:</p>
     ${[0, 1, 2].map(k => `<button class="btn alt" onclick="openLevel(${k})">Level ${k + 1}</button>`).join("")}
