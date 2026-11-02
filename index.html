@@ -10,19 +10,16 @@
   Sharjah Indian School, Juwaiza – Department of Computer Science
 
   SETUP:
-  1. SHEET_URL – paste the Web App URL from your Google Apps Script deployment.
+  1. SHEET_URL – the Web App URL from your Google Apps Script deployment (already filled in).
   2. The PINs are NOT kept in this file. Set them in the "Settings" tab of your Google Sheet
      (Start PIN and Teacher PIN) – you can change them for every class.
-     The website checks the PIN with the Google Sheet, so students cannot find it in the page source,
-     and it is never saved on the computer.
 -->
 <style>
   :root{
     --bg:#f2f6f7; --card:#fff; --ink:#1b2a33; --muted:#5b6b75; --line:#d6e1e4;
-    --teal:#0f5c63; --teal-2:#147a83; --teal-soft:#e2f1f2; --amber:#f2b531;
+    --teal:#0f5c63; --teal-soft:#e2f1f2; --amber:#f2b531; --amber-soft:#fff6d9;
     --green:#2e9d5b; --green-soft:#e5f5eb; --red:#c4473f; --red-soft:#fbeaea;
     --shell:#1d2329; --shell-ink:#e6edf3; --prompt:#8fd3ff;
-    --str:#f7d55c; --int:#5aa7f0; --float:#4cc38a;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
@@ -40,7 +37,7 @@
   h2{margin:0 0 8px;font-size:20px;color:var(--teal)}
   .tag{display:inline-block;font-size:12px;font-weight:700;background:var(--teal-soft);color:var(--teal);padding:3px 10px;border-radius:12px;margin-bottom:8px}
   label{display:block;font-weight:600;margin:12px 0 4px;font-size:14px}
-  input[type=text],input[type=password],select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:inherit}
+  input[type=text],select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:inherit}
   .row{display:flex;gap:12px}.row>div{flex:1}
   .btn{background:var(--teal);color:#fff;border:0;border-radius:8px;padding:10px 18px;font-size:15px;font-weight:600;cursor:pointer;margin:12px 8px 0 0}
   .btn.alt{background:#fff;color:var(--teal);border:1px solid var(--teal)}
@@ -51,7 +48,7 @@
   .opt:hover:not(:disabled){border-color:var(--teal)}
   .opt.right{border-color:var(--green);background:var(--green-soft)}
   .opt.wrong{border-color:var(--red);background:var(--red-soft)}
-  .msg{margin-top:12px;padding:10px 12px;border-radius:8px;font-size:14px;line-height:1.45}
+  .msg{margin-top:12px;padding:10px 12px;border-radius:8px;font-size:15px;line-height:1.45}
   .ok{background:var(--green-soft);color:#1d6b3d}.bad{background:var(--red-soft);color:#8a2b25}.info{background:var(--teal-soft);color:#0d4a50}
   .hint{font-size:14px;color:var(--teal);cursor:pointer;text-decoration:underline;display:inline-block;margin-top:10px}
   .center{text-align:center}
@@ -59,33 +56,28 @@
   .hidden{display:none}
 
   /* simulator */
-  .sim{display:grid;grid-template-columns:1.25fr 1fr;gap:14px}
+  .sim{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
   .panel-t{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:0 0 6px}
-  .editor{background:#fbfcfd;border:1px solid var(--line);border-radius:8px;padding:8px 0;font-family:Consolas,monospace;font-size:14px}
-  .ln{padding:3px 12px;white-space:pre;color:#8a98a1;border-left:3px solid transparent}
-  .ln.now{background:#fff6d9;color:var(--ink);border-left-color:var(--amber)}
-  .ln.ran{color:var(--ink)}
-  .shell{background:var(--shell);color:var(--shell-ink);border-radius:8px;padding:10px 12px;font-family:Consolas,monospace;font-size:14px;min-height:150px;margin-top:10px;white-space:pre-wrap}
+  .codeline{background:#fbfcfd;border:2px solid var(--amber);border-radius:8px;padding:12px;font-family:Consolas,monospace;font-size:16px;word-break:break-word}
+  .codeline .fn{color:#7b3fbf;font-weight:700}.codeline .q{color:#1b7f3b}
+  .shell{background:var(--shell);color:var(--shell-ink);border-radius:8px;padding:12px;font-family:Consolas,monospace;font-size:16px;min-height:110px;white-space:pre-wrap}
   .shell .p{color:var(--prompt)}
   .shell .err{color:#ff8a80}
-  .shell input{background:transparent;border:0;border-bottom:1px dashed #8fd3ff;color:#fff;font-family:Consolas,monospace;font-size:14px;width:160px;outline:none;padding:0}
-  .cursor{display:inline-block;width:8px;background:#e6edf3;animation:blink 1s steps(1) infinite}
+  .shell input{background:transparent;border:0;border-bottom:1px dashed #8fd3ff;color:#fff;font-family:Consolas,monospace;font-size:16px;width:170px;outline:none;padding:0}
+  .cursor{display:inline-block;width:9px;background:#e6edf3;animation:blink 1s steps(1) infinite}
   @keyframes blink{50%{opacity:0}}
-  .shelf{background:#f7f3ea;border:1px solid #e7dcc4;border-radius:8px;padding:12px;min-height:240px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:12px}
-  .box{width:116px;border-radius:8px;border:2px solid #333;background:#fff;text-align:center;animation:drop .45s ease-out;overflow:hidden}
-  .box .lbl{font-family:Consolas,monospace;font-weight:700;font-size:13px;padding:4px;background:#333;color:#fff}
-  .box .val{font-family:Consolas,monospace;font-size:17px;padding:12px 4px;word-break:break-all;transition:all .5s}
-  .box .ty{font-size:11px;padding:3px;font-weight:700;transition:all .5s}
-  .box.str{border-color:#c9a62a}.box.str .lbl{background:#c9a62a}.box.str .ty{background:var(--str)}
-  .box.int{border-color:#2f7fcb}.box.int .lbl{background:#2f7fcb}.box.int .ty{background:var(--int);color:#fff}
-  .box.float{border-color:#259965}.box.float .lbl{background:#259965}.box.float .ty{background:var(--float);color:#fff}
-  .box.flash{animation:flash .8s}
-  @keyframes drop{from{transform:translateY(-30px);opacity:0}to{transform:none;opacity:1}}
-  @keyframes flash{0%,100%{transform:none}40%{transform:scale(1.12)}}
-  .legend{display:flex;gap:10px;font-size:12px;margin-top:8px;flex-wrap:wrap}
-  .legend span{display:inline-flex;align-items:center;gap:4px}
-  .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
-  .note{min-height:48px}
+  .flow{display:flex;flex-direction:column;gap:8px}
+  .fs{display:flex;align-items:center;gap:12px;border:2px solid var(--line);border-radius:10px;padding:12px;background:#fff;transition:all .3s;opacity:.5}
+  .fs .ic{font-size:30px;width:40px;text-align:center}
+  .fs b{display:block;font-size:15px}
+  .fs span{font-size:13px;color:var(--muted)}
+  .fs.on{opacity:1;border-color:var(--amber);background:var(--amber-soft);transform:scale(1.02)}
+  .fs.did{opacity:1;border-color:var(--green)}
+  .fs.off{opacity:.25}
+  .arrow{text-align:center;color:var(--muted);font-size:18px;line-height:1}
+  .note{min-height:50px;font-size:16px}
+  .dots{display:flex;gap:6px;justify-content:center;margin-top:10px}
+  .dots i{width:10px;height:10px;border-radius:50%;background:#d0dadd}.dots i.on{background:var(--teal)}
   .lvchips{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
   .tick{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:15px}
   .tick input{width:18px;height:18px}
@@ -112,40 +104,11 @@
 
 <script>
 /* ================= SETTINGS ================= */
-const SHEET_URL   = "https://script.google.com/macros/s/AKfycbwqr5CRtqIDlnSKXZit5_V6uF9uuTO-8yqdcuu0De4FZqDzdntgyLqZuHj0ooHXoHce/exec";       // paste your Apps Script Web App URL here
-// Only used for testing BEFORE SHEET_URL is added. Once SHEET_URL is set, these are ignored –
-// you can leave them empty ("") so no PIN appears in this file.
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbymOdMtMaTqi4rHcXuAuAdbxeZ_owsMyLH3BofUkcw2NdMdfNY8yVco9UMAzd9n0o-r/exec";
+const GRADES    = ["VIII", "VII", "VI"];   // first one is selected by default
+// Only used for testing when SHEET_URL is empty. With SHEET_URL set, PINs come from the Google Sheet.
 const TEST_START_PIN   = "";
 const TEST_TEACHER_PIN = "";
-
-/* PIN check – asks the Google Sheet, so the real PINs are never inside this website */
-async function pinOK(kind, pin){
-  pin = String(pin).trim();
-  if(!pin) return false;
-  if(!SHEET_URL) return pin === (kind === "start" ? TEST_START_PIN : TEST_TEACHER_PIN);
-  const r = await fetch(SHEET_URL + "?check=" + kind + "&pin=" + encodeURIComponent(pin), { cache: "no-store" });
-  const j = await r.json();
-  return j.ok === true;
-}
-/* PIN box that browsers will NOT offer to save or autofill (not a password field) */
-function pinBox(id){
-  return `<input type="text" id="${id}" name="p${Math.random().toString(36).slice(2)}" inputmode="numeric"
-    autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other"
-    style="-webkit-text-security:disc;text-security:disc;letter-spacing:3px">`;
-}
-async function checkPinUI(kind, inputId, btnId, onOK, badMsg){
-  const inp = $(inputId), btn = $(btnId), pin = inp.value;
-  inp.value = "";                      // clear the box straight away
-  btn.disabled = true; $("m").innerHTML = `<div class="msg info">Checking PIN…</div>`;
-  try{
-    if(await pinOK(kind, pin)) return onOK();
-    $("m").innerHTML = `<div class="msg bad">${badMsg}</div>`;
-  }catch(e){
-    $("m").innerHTML = `<div class="msg bad">Could not check the PIN – please check the internet connection and try again.</div>`;
-  }
-  btn.disabled = false; inp.focus();
-}
-const GRADES      = ["VIII", "VII", "VI"];   // first one is selected by default
 
 /* ================= CONTENT ================= */
 const STARTER = [
@@ -155,50 +118,43 @@ const STARTER = [
     opts: ["A wall clock", "An ATM asking for your PIN", "A road sign"], a: 1 }
 ];
 const PLENARY = [
-  { q: "The user types <b>13</b>. What happens?<pre>age = input(\"Age: \")\nprint(age + 1)</pre>",
-    opts: ["It prints 14", "It prints 131", "Error – age is text, so Python cannot add 1"], a: 2 },
-  { q: "Which line correctly takes a <b>decimal price</b> as input?",
-    opts: ["<code>price = input(float(\"Price: \"))</code>", "<code>price = float(input(\"Price: \"))</code>", "<code>price = float input(\"Price: \")</code>"], a: 1 }
+  { q: "What does the <code>input()</code> function do?",
+    opts: ["It only shows a message on the screen", "It shows a question and waits for the user to type an answer", "It deletes what the user typed"], a: 1 },
+  { q: "Which line is written correctly?",
+    opts: ["<code>input(What is your name?)</code>", "<code>input(\"What is your name? \")</code>", "<code>Input(\"What is your name? \")</code>"], a: 1 }
 ];
-const HOT_Q = "Why should we always write a clear message inside input(), like input(\"Enter your age: \")? What could happen if there was no message?";
+const HOT_Q = "Why should we always write a clear question inside input(), like input(\"What is your name? \")? What could happen if there was no question?";
 
+/* Simulator – each step is ONE line of code */
 const SIM = [
-  { code: 'name = input("Enter your name: ")', kind: "input", prompt: "Enter your name: ", typed: "Aisha", v: "name", t: "str",
-    note: "<b>input()</b> shows the prompt and <b>waits</b>. Whatever the user types is stored in the variable <b>name</b>." },
-  { code: 'print("Hello", name)', kind: "print", out: "Hello Aisha",
-    note: "print() takes the value out of the <b>name</b> box and displays it." },
-  { code: 'num = input("Enter a number: ")', kind: "input", prompt: "Enter a number: ", typed: "5", v: "num", t: "str",
-    note: "The user typed 5 – but look at the box colour. input() <b>always gives text</b>, so it is stored as \"5\"." },
-  { code: 'print(num + num)', kind: "print", out: "55",
-    note: "🔎 <b>The 55 Mystery!</b> Because num is text, + <b>joins</b> the text: \"5\" + \"5\" = \"55\", not 10." },
-  { code: 'age = int(input("Enter your age: "))', kind: "input", prompt: "Enter your age: ", typed: "13", v: "age", t: "str", conv: "int",
-    note: "<b>int()</b> converts the text \"13\" into the whole number 13 (blue box). Now we can do maths with it." },
-  { code: 'print(age + 1)', kind: "print", out: "14",
-    note: "age is a whole number, so age + 1 really adds: 13 + 1 = 14 ✔" },
-  { code: 'price = float(input("Price in AED: "))', kind: "input", prompt: "Price in AED: ", typed: "1.50", v: "price", t: "str", conv: "float",
-    note: "<b>float()</b> converts the text into a decimal number (green box) – perfect for prices in AED." },
-  { code: 'print("Total for 2 karak:", price * 2)', kind: "print", out: "Total for 2 karak: 3.0",
-    note: "🎉 You have seen the whole Input Machine! Click <b>Continue</b> to try it yourself." }
+  { code: 'input("What is your name? ")', prompt: "What is your name? ", typed: "Aisha", out: null,
+    note: "<b>input()</b> shows the question and then <b>waits</b>. The user types an answer and presses <b>Enter</b>." },
+  { code: 'print("Hello", input("What is your name? "))', prompt: "What is your name? ", typed: "Aisha", out: "Hello Aisha",
+    note: "Put <b>input()</b> inside <b>print()</b>. Python asks the question first, then prints <b>Hello</b> with the answer." },
+  { code: 'print("You live in", input("Which emirate do you live in? "))', prompt: "Which emirate do you live in? ", typed: "Sharjah", out: "You live in Sharjah",
+    note: "A different question – the same idea. The answer is printed after the message." },
+  { code: 'print(input("Your favourite UAE food? "), "is delicious!")', prompt: "Your favourite UAE food? ", typed: "Luqaimat", out: "Luqaimat is delicious!",
+    note: "The answer can also come <b>first</b>. 🎉 Well done – click <b>Continue</b> to try it yourself!" }
 ];
 
 const LEVELS = [
-  { title: "Level 1 – Greeting Bot 👋",
-    task: "Take the user's <b>name</b> and <b>emirate</b> as input and print a personalised welcome message.",
-    sample: "Enter your name: Omar\nWhich emirate do you live in? Ajman\nWelcome Omar! Greetings to everyone in Ajman!",
-    hint: "You need two input() lines, each saved in its own variable. Then use both variables in one print()." },
-  { title: "Level 2 – Birthday Calculator 🎂",
-    task: "Take the user's <b>age</b> as input, convert it with <b>int()</b> and print the age next year in a sentence.",
-    sample: "Enter your age: 13\nNext year you will be 14 years old!",
-    hint: "Remember the 55 Mystery – change the text into a whole number before you add 1." },
+  { title: "Level 1 – Hello Bot 👋",
+    task: "Write a program that asks the user's <b>name</b> and prints <b>Hello</b> with the name.",
+    sample: "What is your name? Omar\nHello Omar",
+    hint: "Put input() inside print(), after the word \"Hello\" and a comma." },
+  { title: "Level 2 – My UAE Questions 🇦🇪",
+    task: "Write a program that asks <b>3 questions</b> and prints each answer with a message:<br>• your favourite emirate &nbsp;• your favourite UAE landmark &nbsp;• your favourite sport",
+    sample: "Your favourite emirate? Fujairah\nMy favourite emirate is Fujairah\nYour favourite UAE landmark? Burj Khalifa\nI love Burj Khalifa\nYour favourite sport? Football\nI enjoy playing Football",
+    hint: "Write 3 lines – each one is a print() with an input() inside it." },
   { title: "Level 3 – Bug Hunt 🐞",
-    task: "Copy this program into IDLE. It has <b>2 bugs</b>. Fix them so that it runs correctly.",
-    code: 'age = input("Age: ")\nprint("Next year:", age + 1)\nprice = input(float("Price: "))\nprint("Price is AED", price)',
-    sample: "Age: 13\nNext year: 14\nPrice: 2.5\nPrice is AED 2.5",
-    hint: "Bug 1: can text be added to a number? Bug 2: check the order – which function should be on the inside?" },
-  { title: "Level 4 (optional) – Karak & Snacks Bill 🧾",
-    task: "Take the <b>price</b> (decimal) and <b>quantity</b> (whole number) as input, calculate <b>total = price * quantity</b> and print the bill in a sentence.",
-    sample: "Price of one karak in AED: 1.50\nHow many cups? 4\nYour bill is AED 6.0",
-    hint: "Price can have decimals and quantity is a whole number – use a different conversion for each." }
+    task: "Copy this program into IDLE. It has <b>3 bugs</b>. Fix them so that the program runs correctly.",
+    code: 'print("Hello", input(What is your name? ))\nprint("Welcome to" input("Which city are you in? "))\nPrint(input("Your favourite colour? "))',
+    sample: "What is your name? Mariam\nHello Mariam\nWhich city are you in? Ajman\nWelcome to Ajman\nYour favourite colour? Blue\nBlue",
+    hint: "Look for: a question with no quotes, a missing comma, and a capital letter that should be small." },
+  { title: "Level 4 (optional) – Metro Ticket Kiosk 🚇",
+    task: "Make a Dubai Metro kiosk that asks the traveller's <b>name</b> and <b>destination station</b>, and prints a ticket with a line of <b>=</b> signs at the top and bottom.",
+    sample: "==============================\nWhat is your name? Fatima\nPassenger: Fatima\nWhere are you going? Mall of the Emirates\nGoing to: Mall of the Emirates\nHave a safe journey!\n==============================",
+    hint: "Use print() for the = lines and the last message. Use print() with input() inside for the name and station." }
 ];
 
 const STAGES = [["starter","Starter"],["gate","🔒 PIN"],["sim","Simulator"],["missions","Try it"],["levels","Levels"],["check","Teacher Check"],["plenary","Plenary"],["done","Badge"]];
@@ -255,6 +211,34 @@ function render(){
   ({ starter: () => quiz("starter"), gate, sim, missions, levels, check, plenary: () => S.pq < 2 ? quiz("plenary") : hot(), done })[S.stage]();
 }
 
+/* ================= PIN HELPERS ================= */
+async function pinOK(kind, pin){
+  pin = String(pin).trim();
+  if(!pin) return false;
+  if(!SHEET_URL) return pin === (kind === "start" ? TEST_START_PIN : TEST_TEACHER_PIN) && pin !== "";
+  const r = await fetch(SHEET_URL + "?check=" + kind + "&pin=" + encodeURIComponent(pin), { cache: "no-store" });
+  const j = await r.json();
+  return j.ok === true;
+}
+/* not a password field, so browsers will not offer to save or autofill it */
+function pinBox(id){
+  return `<input type="text" id="${id}" name="p${Math.random().toString(36).slice(2)}" inputmode="numeric"
+    autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other"
+    style="-webkit-text-security:disc;letter-spacing:3px">`;
+}
+async function checkPinUI(kind, inputId, btnId, onOK, badMsg){
+  const inp = $(inputId), btn = $(btnId), pin = inp.value;
+  inp.value = "";
+  btn.disabled = true; $("m").innerHTML = `<div class="msg info">Checking PIN…</div>`;
+  try{
+    if(await pinOK(kind, pin)) return onOK();
+    $("m").innerHTML = `<div class="msg bad">${badMsg}</div>`;
+  }catch(e){
+    $("m").innerHTML = `<div class="msg bad">Could not check the PIN – please check the internet connection and try again.</div>`;
+  }
+  btn.disabled = false; inp.focus();
+}
+
 /* ================= LOGIN ================= */
 function login(){
   const divs = "ABCDEFGHIJKLMNOPQ".split("").map(d => `<option>${d}</option>`).join("");
@@ -262,7 +246,7 @@ function login(){
   <div class="card" style="max-width:480px;margin:30px auto">
     <h2>Welcome to the Python Input Lab!</h2>
     <p style="color:var(--muted);margin-top:0">Sign in to start.</p>
-    <label>Name</label><input type="text" id="n" maxlength="40" placeholder="e.g. Aisha Khan">
+    <label>Name</label><input type="text" id="n" maxlength="40" placeholder="e.g. Aisha Khan" autocomplete="off">
     <div class="row">
       <div><label>Grade</label><select id="g">${GRADES.map(g => `<option>${g}</option>`).join("")}</select></div>
       <div><label>Division</label><select id="d">${divs}</select></div>
@@ -334,25 +318,26 @@ function gate(){
   $("gpin").onkeydown = e => { if(e.key === "Enter") tryPin(); };
 }
 
-/* ================= SHELL + MEMORY HELPERS ================= */
+/* ================= SIMPLE HELPERS ================= */
+function colour(code){   // light colouring: function names purple, text in quotes green
+  return esc(code).replace(/(&quot;.*?&quot;)/g, '<span class="q">$1</span>').replace(/\b(print|input)\b/g, '<span class="fn">$1</span>');
+}
 function shellLine(sh, html){ const d = document.createElement("div"); d.innerHTML = html; sh.appendChild(d); return d; }
-function putBox(shelf, v, val, t){
-  let b = shelf.querySelector(`[data-v="${v}"]`);
-  const show = t === "str" ? `"${esc(val)}"` : esc(val);
-  const tl = { str: "text (str)", int: "whole number (int)", float: "decimal (float)" }[t];
-  if(!b){ b = document.createElement("div"); b.dataset.v = v; shelf.appendChild(b); }
-  b.className = "box " + t;
-  b.innerHTML = `<div class="lbl">${esc(v)}</div><div class="val">${show}</div><div class="ty">${tl}</div>`;
-  return b;
+function flowHTML(id){
+  return `<div class="flow" id="${id}">
+    <div class="fs" data-s="0"><div class="ic">💬</div><div><b>1. Shows the question</b><span>input() writes the question in the Shell</span></div></div>
+    <div class="arrow">⬇</div>
+    <div class="fs" data-s="1"><div class="ic">⌨️</div><div><b>2. Waits for you to type</b><span>The program stops until you press Enter</span></div></div>
+    <div class="arrow">⬇</div>
+    <div class="fs" data-s="2"><div class="ic">🖨️</div><div><b>3. Shows the answer</b><span>print() displays the message with your answer</span></div></div>
+  </div>`;
 }
-function convert(b, t, val){
-  setTimeout(() => {
-    b.className = "box " + t + " flash";
-    b.querySelector(".val").textContent = val;
-    b.querySelector(".ty").textContent = t === "int" ? "whole number (int)" : "decimal (float)";
-  }, 900);
+function flowSet(id, active, hasPrint){
+  document.querySelectorAll(`#${id} .fs`).forEach(f => {
+    const s = +f.dataset.s;
+    f.className = "fs" + (s === 2 && !hasPrint ? " off" : s < active ? " did" : s === active ? " on" : "");
+  });
 }
-const legend = `<div class="legend"><span><i style="background:var(--str)"></i>text</span><span><i style="background:var(--int)"></i>whole number</span><span><i style="background:var(--float)"></i>decimal</span></div>`;
 
 /* ================= SIMULATOR ================= */
 let simI = 0, busy = false;
@@ -361,76 +346,102 @@ function sim(){
   app.innerHTML = `
   <div class="card">
     <span class="tag">Main Activity · Explore</span>
-    <h2>Input Machine Simulator 🎰</h2>
-    <p style="margin-top:0">Click <b>Run next line</b> and watch what happens in the Shell and in the computer's memory.</p>
+    <h2>How does input() work? 🤔</h2>
+    <p style="margin-top:0">Click <b>▶ Run</b> and watch the 3 steps.</p>
     <div class="sim">
       <div>
-        <p class="panel-t">Program</p>
-        <div class="editor">${SIM.map((s, i) => `<div class="ln" id="ln${i}">${esc(s.code)}</div>`).join("")}</div>
-        <p class="panel-t" style="margin-top:10px">IDLE Shell</p>
-        <div class="shell" id="sh" style="margin-top:0"></div>
+        <p class="panel-t">Line of code</p>
+        <div class="codeline" id="cl"></div>
+        <p class="panel-t" style="margin-top:12px">IDLE Shell</p>
+        <div class="shell" id="sh"></div>
       </div>
       <div>
-        <p class="panel-t">Memory (variable boxes)</p>
-        <div class="shelf" id="shelf"></div>
-        ${legend}
+        <p class="panel-t">What the computer does</p>
+        ${flowHTML("flow")}
       </div>
     </div>
-    <div class="msg info note" id="note">Ready! Click <b>Run next line</b> to start.</div>
-    <button class="btn" id="run">▶ Run next line</button>
-    <button class="btn alt" id="restart">↺ Restart</button>
+    <div class="msg info note" id="note">Click <b>▶ Run</b> to start.</div>
+    <div class="dots" id="dots"></div>
+    <button class="btn" id="run">▶ Run</button>
+    <button class="btn alt hidden" id="nextEx">Next example ▶</button>
     <button class="btn ${S.simDone ? "" : "hidden"}" id="cont">Continue ▶</button>
   </div>`;
-  $("run").onclick = simStep;
-  $("restart").onclick = sim;
+  $("run").onclick = simRun;
+  $("nextEx").onclick = () => { simI++; simShow(); };
   $("cont").onclick = () => go("missions");
+  simShow();
 }
-function simStep(){
-  if(busy || simI >= SIM.length) return;
+function simShow(){
+  const s = SIM[simI];
+  $("cl").innerHTML = colour(s.code);
+  $("sh").innerHTML = "";
+  $("note").innerHTML = `Example ${simI + 1} of ${SIM.length}. Click <b>▶ Run</b>.`;
+  $("dots").innerHTML = SIM.map((x, i) => `<i class="${i <= simI ? "on" : ""}"></i>`).join("");
+  flowSet("flow", -1, !!s.out);
+  $("run").classList.remove("hidden"); $("run").disabled = false;
+  $("nextEx").classList.add("hidden");
+}
+function simRun(){
+  if(busy) return;
   busy = true; $("run").disabled = true;
-  const s = SIM[simI], sh = $("sh"), shelf = $("shelf");
-  document.querySelectorAll(".ln").forEach(l => l.classList.remove("now"));
-  $("ln" + simI).classList.add("now", "ran");
-  const finish = () => {
-    $("note").innerHTML = s.note;
-    simI++; busy = false;
-    if(simI >= SIM.length){
-      $("run").disabled = true;
-      if(!S.simDone){ S.simDone = true; addPts(20); commit(); $("note").innerHTML += " <b>+20 points</b>"; }
-      $("cont").classList.remove("hidden");
-    } else $("run").disabled = false;
-  };
-  if(s.kind === "print"){ shellLine(sh, esc(s.out)); finish(); return; }
+  const s = SIM[simI], sh = $("sh");
+  sh.innerHTML = "";
+  flowSet("flow", 0, !!s.out);
+  $("note").innerHTML = "💬 <b>Step 1:</b> input() shows the question.";
   const line = shellLine(sh, `<span class="p">${esc(s.prompt)}</span><span class="ty"></span><span class="cursor">&nbsp;</span>`);
-  $("note").innerHTML = "⏳ The computer is <b>waiting</b> for the user to type…";
-  let c = 0;
-  const t = setInterval(() => {
-    line.querySelector(".ty").textContent = s.typed.slice(0, ++c);
-    if(c >= s.typed.length){
-      clearInterval(t);
+  setTimeout(() => {
+    flowSet("flow", 1, !!s.out);
+    $("note").innerHTML = "⌨️ <b>Step 2:</b> The program is <b>waiting</b>… the user types an answer and presses Enter.";
+    let c = 0;
+    setTimeout(function typeNext(){
+      line.querySelector(".ty").textContent = s.typed.slice(0, ++c);
+      if(c < s.typed.length) return setTimeout(typeNext, 230);
       setTimeout(() => {
         line.querySelector(".cursor").remove();
-        const b = putBox(shelf, s.v, s.typed, "str");
-        if(s.conv){ convert(b, s.conv, s.conv === "int" ? String(parseInt(s.typed)) : String(parseFloat(s.typed))); setTimeout(finish, 1000); }
-        else finish();
-      }, 350);
+        if(s.out){
+          flowSet("flow", 2, true);
+          shellLine(sh, esc(s.out));
+          setTimeout(finish, 300);
+        } else { flowSet("flow", 3, false); finish(); }
+      }, 500);
+    }, 900);
+  }, 1300);
+  function finish(){
+    $("note").innerHTML = s.note;
+    busy = false;
+    $("run").classList.add("hidden");
+    if(simI < SIM.length - 1){ $("nextEx").classList.remove("hidden"); }
+    else {
+      if(!S.simDone){ S.simDone = true; addPts(20); commit(); $("note").innerHTML += " <b>+20 points</b>"; }
+      $("cont").classList.remove("hidden");
     }
-  }, 220);
+  }
 }
 
-/* ================= MISSIONS ================= */
+/* ================= TRY IT YOURSELF ================= */
+const Q = `(["'])(.*?)\\1`;   // text in quotes
 const MISSIONS = [
-  { title: "Mission 1 – Ask for a name",
-    task: "Write <b>one line</b> of Python that asks the user for their name and stores it in a variable called <b>name</b>.",
-    re: /^\s*name\s*=\s*input\s*\(\s*(["'])(.*?)\1\s*\)\s*$/, v: "name", t: "str",
-    hint: "Start with the variable, then =, then the function that ‘listens’, with a message in quotes inside its brackets." },
-  { title: "Mission 2 – Ask for an age (as a number)",
-    task: "Write <b>one line</b> that asks for the user's age and stores it as a <b>whole number</b> in a variable called <b>age</b>.",
-    re: /^\s*age\s*=\s*int\s*\(\s*input\s*\(\s*(["'])(.*?)\1\s*\)\s*\)\s*$/, v: "age", t: "int",
-    hint: "Wrap your input() inside the function that makes whole numbers." },
-  { title: "Mission 3 – Predict the output",
-    predict: true }
+  { title: "Mission 1 – Ask a question",
+    task: "Write <b>one line</b> of Python that asks the user: <b>What is your name?</b>",
+    re: new RegExp(`^\\s*input\\s*\\(\\s*${Q}\\s*\\)\\s*$`),
+    parse: m => ({ prompt: m[2], before: null, after: null }),
+    hint: "Use the function that asks questions. The question goes inside the brackets, in quotes." },
+  { title: "Mission 2 – Ask and print",
+    task: "Write <b>one line</b> that asks <b>Which emirate do you live in?</b> and prints <b>I live in</b> with the answer.",
+    re: new RegExp(`^\\s*print\\s*\\(\\s*(?:${Q}\\s*,\\s*)?input\\s*\\(\\s*(["'])(.*?)\\3\\s*\\)\\s*\\)\\s*$`),
+    parse: m => ({ prompt: m[4], before: m[2] == null ? null : m[2], after: null }),
+    hint: "Start with print( then the message in quotes, a comma, and then input() with the question." },
+  { title: "Mission 3 – What comes first?", predict: true }
 ];
+function friendly(c, needPrint){
+  if(/\bInput\s*\(|\bPrint\s*\(/.test(c)) return "Python is case-sensitive – write <b>input</b> and <b>print</b> with small letters.";
+  if(!/input\s*\(/.test(c)) return "Use the <b>input()</b> function to ask the question.";
+  if(needPrint && !/print\s*\(/.test(c)) return "Put input() inside <b>print()</b> so the answer is shown.";
+  if((c.match(/\(/g) || []).length !== (c.match(/\)/g) || []).length) return "Check your brackets – every <b>(</b> needs a <b>)</b>.";
+  if(!/["']/.test(c)) return "The question must be inside <b>quotes</b> \" \".";
+  if(needPrint && !/,/.test(c)) return "Put a <b>comma</b> between the message and input().";
+  return "Almost! Check your quotes, commas and brackets.";
+}
 function missions(){
   const i = S.m;
   if(i >= MISSIONS.length) return go("levels");
@@ -440,18 +451,18 @@ function missions(){
     <div class="card">
       <span class="tag">Try it yourself · ${i + 1} of 3</span>
       <h2>${M.title}</h2>
-      <p>The user types <b>5</b>. What does this program print?</p>
-      <pre>num = input("Enter a number: ")\nprint(num + num)</pre>
-      ${["10", "55", "Error"].map((o, k) => `<button class="opt" data-k="${k}">${L(k)}. ${o}</button>`).join("")}
+      <p>When this line runs, what appears in the Shell <b>first</b>?</p>
+      <pre>print("Hi", input("Your name? "))</pre>
+      ${["Hi", "The question: Your name?", "Nothing appears"].map((o, k) => `<button class="opt" data-k="${k}">${L(k)}. ${o}</button>`).join("")}
       <div id="m"></div>
     </div>`;
     app.querySelectorAll(".opt").forEach(b => b.onclick = () => {
       const k = +b.dataset.k;
-      if(k !== 1){ b.classList.add("wrong"); b.disabled = true; $("m").innerHTML = `<div class="msg bad">Think again – what type of value does input() give? Try another answer.</div>`; return; }
+      if(k !== 1){ b.classList.add("wrong"); b.disabled = true; $("m").innerHTML = `<div class="msg bad">Think again – Python needs the answer before it can print “Hi” with it. Try another answer.</div>`; return; }
       app.querySelectorAll(".opt").forEach(x => x.disabled = true);
       b.classList.add("right");
       S.m++; addPts(10); commit();
-      $("m").innerHTML = `<div class="msg ok">Yes! "5" + "5" joins the text to make 55. +10 points</div><button class="btn" onclick="go('levels')">Go to the Levels ▶</button>`;
+      $("m").innerHTML = `<div class="msg ok">Yes! input() asks the question first and waits. Then print() shows “Hi” with the answer. +10 points</div><button class="btn" onclick="go('levels')">Go to the Levels ▶</button>`;
     });
     return;
   }
@@ -462,66 +473,53 @@ function missions(){
     <p>${M.task}</p>
     <div class="sim">
       <div>
-        <p class="panel-t">Your code</p>
+        <p class="panel-t">Your line of code</p>
         <input type="text" id="code" class="mono" spellcheck="false" autocomplete="off" placeholder="type your line of Python here">
         <button class="btn" id="runm">▶ Run</button>
         <span class="hint" id="hb">Need a hint?</span><div id="hbox"></div>
         <p class="panel-t" style="margin-top:12px">IDLE Shell</p>
-        <div class="shell" id="sh" style="margin-top:0;min-height:90px"></div>
+        <div class="shell" id="sh" style="min-height:90px"></div>
       </div>
       <div>
-        <p class="panel-t">Memory</p>
-        <div class="shelf" id="shelf" style="min-height:150px"></div>
-        ${legend}
+        <p class="panel-t">What the computer does</p>
+        ${flowHTML("mflow")}
       </div>
     </div>
     <div id="m"></div>
   </div>`;
+  flowSet("mflow", -1, i === 1);
   $("hb").onclick = () => { $("hbox").innerHTML = `<div class="msg info">💡 ${M.hint}</div>`; $("hb").remove(); };
+  $("code").onkeydown = e => { if(e.key === "Enter") $("runm").click(); };
   $("runm").onclick = () => {
     const c = $("code").value, sh = $("sh"), mm = M.re.exec(c);
     sh.innerHTML = ""; $("m").innerHTML = "";
-    if(!mm){
-      let why = "Check your spelling, brackets and quotes.";
-      if(!c.includes("=")) why = "Remember to store the answer in a variable using =.";
-      else if(!/input\s*\(/.test(c)) why = "Which function lets the computer ‘listen’ to the user?";
-      else if(!new RegExp("^\\s*" + M.v + "\\s*=").test(c)) why = `The variable must be called <b>${M.v}</b>.`;
-      else if(M.t === "int" && !/int\s*\(/.test(c)) why = "The age must be stored as a whole number, not text.";
-      shellLine(sh, `<span class="err">SyntaxError / Not quite</span>`);
-      $("m").innerHTML = `<div class="msg bad">${why}</div>`;
+    if(!mm || !mm[i === 0 ? 2 : 4].trim()){
+      shellLine(sh, `<span class="err">Error – the program could not run</span>`);
+      $("m").innerHTML = `<div class="msg bad">${mm ? "Write a question inside the quotes." : friendly(c, i === 1)}</div>`;
       return;
     }
+    const P = M.parse(mm);
     $("runm").disabled = true; $("code").disabled = true;
-    askUser(sh, mm[2], M, () => {
+    flowSet("mflow", 0, i === 1);
+    const line = shellLine(sh, `<span class="p">${esc(P.prompt)}</span>`);
+    const inp = document.createElement("input"); inp.type = "text"; inp.placeholder = "type & press Enter";
+    line.appendChild(inp);
+    setTimeout(() => { flowSet("mflow", 1, i === 1); inp.focus(); }, 600);
+    $("m").innerHTML = `<div class="msg info">⌨️ Your program is waiting – type an answer in the Shell and press <b>Enter</b>.</div>`;
+    inp.onkeydown = e => {
+      if(e.key !== "Enter" || !inp.value.trim()) return;
+      const v = inp.value;
+      line.innerHTML = `<span class="p">${esc(P.prompt)}</span>${esc(v)}`;
+      if(i === 1){ flowSet("mflow", 2, true); shellLine(sh, esc((P.before != null ? P.before + " " : "") + v)); }
+      else flowSet("mflow", 3, false);
       S.m++; addPts(10); commit();
       $("m").innerHTML = `<div class="msg ok">Mission complete! +10 points</div><button class="btn" onclick="missions()">Next mission ▶</button>`;
-    });
-  };
-}
-function askUser(sh, prompt, M, done){
-  const line = shellLine(sh, `<span class="p">${esc(prompt)}</span>`);
-  const inp = document.createElement("input"); inp.type = "text"; inp.placeholder = "type & press Enter";
-  line.appendChild(inp); inp.focus();
-  $("m").innerHTML = `<div class="msg info">⏳ Your program is waiting – type an answer in the Shell and press <b>Enter</b>.</div>`;
-  inp.onkeydown = e => {
-    if(e.key !== "Enter") return;
-    const v = inp.value;
-    if(!v.trim()) return;
-    line.innerHTML = `<span class="p">${esc(prompt)}</span>${esc(v)}`;
-    if(M.t === "int" && !/^\s*-?\d+\s*$/.test(v)){
-      shellLine(sh, `<span class="err">ValueError: invalid literal for int() with base 10: '${esc(v)}'</span>`);
-      $("m").innerHTML = `<div class="msg bad">int() can only convert whole numbers. Run it again and type a number like 13.</div>`;
-      setTimeout(() => askUser(sh, prompt, M, done), 1200);
-      return;
-    }
-    const b = putBox($("shelf"), M.v, v, "str");
-    if(M.t === "int"){ convert(b, "int", String(parseInt(v))); setTimeout(done, 1000); }
-    else done();
+    };
   };
 }
 
 /* ================= LEVELS ================= */
-let viewLv = null;   // which level is open on screen (students can go back to earlier levels)
+let viewLv = null;   // which level is open (students can go back to earlier levels)
 function canOpen(k){ return k <= S.cur || S.lv[k]; }
 function openLevel(k){ if(!canOpen(k)) return; viewLv = k; if(S.stage !== "levels") go("levels"); else { levels(); window.scrollTo(0, 0); } }
 function levels(){
@@ -584,9 +582,7 @@ function check(){
     <div id="m"></div>
   </div>`;
   if($("l4")) $("l4").onclick = () => { S.cur = 3; openLevel(3); };
-  $("ap").onclick = () => {
-    checkPinUI("teacher", "pin", "ap", () => { S.approved = true; go("plenary"); }, "Incorrect PIN.");
-  };
+  $("ap").onclick = () => checkPinUI("teacher", "pin", "ap", () => { S.approved = true; go("plenary"); }, "Incorrect PIN.");
 }
 
 /* ================= HOT + BADGE ================= */
@@ -595,7 +591,7 @@ function hot(){
   <div class="card">
     <span class="tag">Plenary · HOT Question</span>
     <h2>Think deeper 🧠</h2>
-    <p>${HOT_Q}</p>
+    <p>${esc(HOT_Q)}</p>
     <textarea id="h" rows="5" placeholder="Type your answer here…"></textarea>
     <button class="btn" id="sub">Submit answer</button>
     <div id="m"></div>
