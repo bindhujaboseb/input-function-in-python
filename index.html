@@ -181,24 +181,24 @@ const LEVELS = [
       ["Runs without errors", r => r.ok]
     ] },
   { title: "Level 2 – My UAE Questions 🇦🇪",
-    task: "Write a program that asks <b>3 questions</b> and prints each answer with a message:<br>• your favourite emirate &nbsp;• your favourite UAE landmark &nbsp;• your favourite sport",
-    sample: "Your favourite emirate? Fujairah\nMy favourite emirate is Fujairah\nYour favourite UAE landmark? Burj Khalifa\nI love Burj Khalifa\nYour favourite sport? Football\nI enjoy playing Football",
+    task: "Write a program that asks <b>2 questions</b> and prints each answer with a message:<br>• your favourite emirate &nbsp;• your favourite UAE landmark",
+    sample: "Your favourite emirate? Fujairah\nMy favourite emirate is Fujairah\nYour favourite UAE landmark? Burj Khalifa\nI love Burj Khalifa",
     start: "# Level 2 – write your program below\n",
-    hint: "Write 3 lines – each one is a print() with a message and an input() inside it.",
+    hint: "Write 2 lines – each one is a print() with a message and an input() inside it.",
     rules: [
-      ["Asks 3 questions using input()", r => r.prompts.length >= 3],
-      ["Prints every answer with a message", r => r.answers.length >= 3 && r.answers.every(a => r.printed.some(l => l.includes(a) && l.trim() !== a.trim()))],
+      ["Asks 2 questions using input()", r => r.prompts.length >= 2],
+      ["Prints every answer with a message", r => r.answers.length >= 2 && r.answers.every(a => r.printed.some(l => l.includes(a) && l.trim() !== a.trim()))],
       ["Runs without errors", r => r.ok]
     ] },
   { title: "Level 3 – Bug Hunt 🐞",
-    task: "This program has <b>3 bugs</b>. Fix them in the editor so that the program runs correctly.",
-    sample: "What is your name? Mariam\nHello Mariam\nWhich city are you in? Ajman\nWelcome to Ajman\nYour favourite colour? Blue\nBlue",
-    start: 'print("Hello", input(What is your name? ))\nprint("Welcome to" input("Which city are you in? "))\nPrint(input("Your favourite colour? "))\n',
-    hint: "Look for: a question with no quotes, a missing comma, and a capital letter that should be small.",
+    task: "This program has <b>2 bugs</b>. Fix them in the editor so that the program runs correctly.",
+    sample: "What is your name? Mariam\nHello Mariam\nYour favourite colour? Blue\nBlue",
+    start: 'print("Hello", input(What is your name? ))\nPrint(input("Your favourite colour? "))\n',
+    hint: "Look for: a question with no quotes, and a capital letter that should be small.",
     rules: [
-      ["All 3 bugs fixed – the program runs without errors", r => r.ok && r.prompts.length >= 3],
-      ["Prints Hello and Welcome to with the answers", r => r.answers.length >= 2 && r.printed.some(l => /hello/i.test(l) && l.includes(r.answers[0])) && r.printed.some(l => /welcome to/i.test(l) && l.includes(r.answers[1]))],
-      ["Prints the favourite colour", r => r.answers.length >= 3 && has(r.printed, r.answers[2])]
+      ["Both bugs fixed – the program runs without errors", r => r.ok && r.prompts.length >= 2],
+      ["Prints Hello with the name", r => r.answers.length >= 1 && r.printed.some(l => /hello/i.test(l) && l.includes(r.answers[0]))],
+      ["Prints the favourite colour", r => r.answers.length >= 2 && has(r.printed, r.answers[1])]
     ] },
   { title: "Level 4 (optional) – Metro Ticket Kiosk 🚇",
     task: "Make a Dubai Metro kiosk that asks the traveller's <b>name</b> and <b>destination station</b>, and prints a ticket with a line of <b>=</b> signs at the top and bottom.",
@@ -529,12 +529,14 @@ const MISSIONS = [
     task: "Write <b>one line</b> of Python that asks the user: <b>What is your name?</b>",
     re: new RegExp(`^\\s*input\\s*\\(\\s*${Q}\\s*\\)\\s*$`),
     parse: m => ({ prompt: m[2], before: null, after: null }),
-    hint: "Use the function that asks questions. The question goes inside the brackets, in quotes." },
+    hint: "Use the function that asks questions. The question goes inside the brackets, in quotes.",
+    answer: 'input("What is your name? ")' },
   { title: "Mission 2 – Ask and print",
     task: "Write <b>one line</b> that asks <b>Which emirate do you live in?</b> and prints <b>I live in</b> with the answer.",
     re: new RegExp(`^\\s*print\\s*\\(\\s*(?:${Q}\\s*,\\s*)?input\\s*\\(\\s*(["'])(.*?)\\3\\s*\\)\\s*\\)\\s*$`),
     parse: m => ({ prompt: m[4], before: m[2] == null ? null : m[2], after: null }),
-    hint: "Start with print( then the message in quotes, a comma, and then input() with the question." },
+    hint: "Start with print( then the message in quotes, a comma, and then input() with the question.",
+    answer: 'print("I live in", input("Which emirate do you live in? "))' },
   { title: "Mission 3 – What comes first?", predict: true }
 ];
 function friendly(c, needPrint){
@@ -562,7 +564,7 @@ function missions(){
     </div>`;
     app.querySelectorAll(".opt").forEach(b => b.onclick = () => {
       const k = +b.dataset.k;
-      if(k !== 1){ b.classList.add("wrong"); b.disabled = true; $("m").innerHTML = `<div class="msg bad">Think again – Python needs the answer before it can print “Hi” with it. Try another answer.</div>`; return; }
+      if(k !== 1){ b.classList.add("wrong"); b.disabled = true; $("m").innerHTML = `<div class="msg bad">Not this one. 💡 Answer: the <b>question</b> appears first – Python must ask and get the answer before it can print “Hi” with it. Click B.</div>`; return; }
       app.querySelectorAll(".opt").forEach(x => x.disabled = true);
       b.classList.add("right");
       S.m++; addPts(10); commit();
@@ -580,7 +582,7 @@ function missions(){
         <p class="panel-t">Your line of code</p>
         <input type="text" id="code" class="mono" spellcheck="false" autocomplete="off" placeholder="type your line of Python here">
         <button class="btn" id="runm">▶ Run</button>
-        <span class="hint" id="hb">Need a hint?</span>${simLink()}<div id="hbox"></div>
+        <span class="hint" id="hb">💡 Show me the answer</span>${simLink()}<div id="hbox"></div>
         <p class="panel-t" style="margin-top:12px">Shell</p>
         <div class="shell" id="sh" style="min-height:90px"></div>
       </div>
@@ -592,7 +594,13 @@ function missions(){
     <div id="m"></div>
   </div>`;
   flowSet("mflow", -1, i === 1);
-  $("hb").onclick = () => { $("hbox").innerHTML = `<div class="msg info">💡 ${M.hint}</div>`; $("hb").remove(); };
+  $("hb").onclick = () => {
+    $("hbox").innerHTML = `<div class="msg info">💡 ${M.hint}<br>Type this line in the box, then click <b>▶ Run</b>:
+      <pre style="margin:8px 0">${esc(M.answer)}</pre>
+      <button class="btn alt" style="margin-top:0" id="fill">Put it in the box for me</button></div>`;
+    $("hb").remove();
+    $("fill").onclick = () => { $("code").value = M.answer; $("sh").innerHTML = ""; $("m").innerHTML = ""; $("code").focus(); };
+  };
   $("code").onkeydown = e => { if(e.key === "Enter") $("runm").click(); };
   $("runm").onclick = () => {
     const c = $("code").value, sh = $("sh"), mm = M.re.exec(c);
