@@ -133,7 +133,7 @@
 <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
 <script>
 /* ================= SETTINGS ================= */
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbzqrNHPz7pAqgZodH5BsSCSyjj34PnWVY9pZPNULPBmph88gCNY66FD44hxLoWbsx4K/exec";
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbwqr5CRtqIDlnSKXZit5_V6uF9uuTO-8yqdcuu0De4FZqDzdntgyLqZuHj0ooHXoHce/exec";
 const GRADES    = ["VIII", "VII", "VI"];   // first one is selected by default
 // Only used for testing when SHEET_URL is empty. With SHEET_URL set, PINs come from the Google Sheet.
 const TEST_START_PIN   = "";
@@ -170,45 +170,43 @@ const SIM = [
    r = result of the run: { ok, error, code, prompts[], answers[], printed[] } */
 const has = (lines, txt) => lines.some(l => l.toLowerCase().includes(String(txt).toLowerCase()));
 const LEVELS = [
-  { title: "Level 1 – Hello Bot 👋",
-    task: "Write a program that asks the user's <b>name</b> and prints <b>Hello</b> with the name.",
+  { title: "Level 1 – Ask a Question 👋",
+    task: "Write <b>one line</b> that asks the user: <b>What is your name?</b>",
+    sample: "What is your name? Omar",
+    start: "# Level 1 – write your line below\n",
+    hint: "Use input() with the question inside quotes.",
+    rules: [
+      ["Asks a question using input()", r => r.prompts.length >= 1],
+      ["The question is inside quotes", r => /input\s*\(\s*["']/.test(r.code)],
+      ["Runs without errors", r => r.ok]
+    ] },
+  { title: "Level 2 – Hello Bot 🤖",
+    task: "Write <b>one line</b> that asks the user's <b>name</b> and prints <b>Hello</b> with the name.",
     sample: "What is your name? Omar\nHello Omar",
-    start: "# Level 1 – write your program below\n",
+    start: "# Level 2 – write your line below\n",
     hint: "Put input() inside print(), after the word \"Hello\" and a comma.",
     rules: [
       ["Asks a question using input()", r => r.prompts.length >= 1],
       ["Prints Hello with the name the user typed", r => r.answers.length >= 1 && r.printed.some(l => /hello/i.test(l) && l.includes(r.answers[0]))],
       ["Runs without errors", r => r.ok]
     ] },
-  { title: "Level 2 – My UAE Questions 🇦🇪",
-    task: "Write a program that asks <b>2 questions</b> and prints each answer with a message:<br>• your favourite emirate &nbsp;• your favourite UAE landmark",
-    sample: "Your favourite emirate? Fujairah\nMy favourite emirate is Fujairah\nYour favourite UAE landmark? Burj Khalifa\nI love Burj Khalifa",
-    start: "# Level 2 – write your program below\n",
-    hint: "Write 2 lines – each one is a print() with a message and an input() inside it.",
+  { title: "Level 3 – Bug Hunt 🐞",
+    task: "This line has <b>1 bug</b>. Fix it in the editor so that the program runs correctly.",
+    sample: "Which emirate do you live in? Ajman\nI live in Ajman",
+    start: 'print("I live in", input(Which emirate do you live in? ))\n',
+    hint: "Look at the question inside input(). What is missing around it?",
+    rules: [
+      ["Bug fixed – the program runs without errors", r => r.ok && r.prompts.length >= 1],
+      ["Prints I live in with the emirate", r => r.answers.length >= 1 && r.printed.some(l => /i live in/i.test(l) && l.includes(r.answers[0]))]
+    ] },
+  { title: "Level 4 (optional) – Metro Kiosk 🚇",
+    task: "Write <b>2 lines</b> for a Dubai Metro kiosk: ask the traveller's <b>name</b> and the <b>station</b> they are going to, and print each answer with a message.",
+    sample: "What is your name? Fatima\nWelcome Fatima\nWhere are you going? Union\nGoing to Union",
+    start: "# Level 4 – write your 2 lines below\n",
+    hint: "Each line is a print() with a message and an input() inside it.",
     rules: [
       ["Asks 2 questions using input()", r => r.prompts.length >= 2],
-      ["Prints every answer with a message", r => r.answers.length >= 2 && r.answers.every(a => r.printed.some(l => l.includes(a) && l.trim() !== a.trim()))],
-      ["Runs without errors", r => r.ok]
-    ] },
-  { title: "Level 3 – Bug Hunt 🐞",
-    task: "This program has <b>2 bugs</b>. Fix them in the editor so that the program runs correctly.",
-    sample: "What is your name? Mariam\nHello Mariam\nYour favourite colour? Blue\nBlue",
-    start: 'print("Hello", input(What is your name? ))\nPrint(input("Your favourite colour? "))\n',
-    hint: "Look for: a question with no quotes, and a capital letter that should be small.",
-    rules: [
-      ["Both bugs fixed – the program runs without errors", r => r.ok && r.prompts.length >= 2],
-      ["Prints Hello with the name", r => r.answers.length >= 1 && r.printed.some(l => /hello/i.test(l) && l.includes(r.answers[0]))],
-      ["Prints the favourite colour", r => r.answers.length >= 2 && has(r.printed, r.answers[1])]
-    ] },
-  { title: "Level 4 (optional) – Metro Ticket Kiosk 🚇",
-    task: "Make a Dubai Metro kiosk that asks the traveller's <b>name</b> and <b>destination station</b>, and prints a ticket with a line of <b>=</b> signs at the top and bottom.",
-    sample: "==============================\nWhat is your name? Fatima\nPassenger: Fatima\nWhere are you going? Mall of the Emirates\nGoing to: Mall of the Emirates\nHave a safe journey!\n==============================",
-    start: "# Level 4 – write your program below\n",
-    hint: "Use print() for the = lines and the last message. Use print() with input() inside for the name and station.",
-    rules: [
-      ["Prints a line of = signs at the top and bottom", r => r.printed.filter(l => /={5,}/.test(l)).length >= 2],
-      ["Asks for the name and the station using input()", r => r.prompts.length >= 2],
-      ["Shows both answers on the ticket", r => r.answers.length >= 2 && r.answers.slice(0, 2).every(a => r.printed.some(l => l.includes(a) && l.trim() !== a.trim()))],
+      ["Prints both answers with a message", r => r.answers.length >= 2 && r.answers.slice(0, 2).every(a => r.printed.some(l => l.includes(a) && l.trim() !== a.trim()))],
       ["Runs without errors", r => r.ok]
     ] }
 ];
@@ -596,10 +594,8 @@ function missions(){
   flowSet("mflow", -1, i === 1);
   $("hb").onclick = () => {
     $("hbox").innerHTML = `<div class="msg info">💡 ${M.hint}<br>Type this line in the box, then click <b>▶ Run</b>:
-      <pre style="margin:8px 0">${esc(M.answer)}</pre>
-      <button class="btn alt" style="margin-top:0" id="fill">Put it in the box for me</button></div>`;
+      <pre style="margin:8px 0">${esc(M.answer)}</pre></div>`;
     $("hb").remove();
-    $("fill").onclick = () => { $("code").value = M.answer; $("sh").innerHTML = ""; $("m").innerHTML = ""; $("code").focus(); };
   };
   $("code").onkeydown = e => { if(e.key === "Enter") $("runm").click(); };
   $("runm").onclick = () => {
